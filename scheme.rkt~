@@ -1,0 +1,3 @@
+(define-syntax swap
+  (syntax-rules ()
+    [(swap a b) (let ([tmp a]) (begin (set! a b) (set! b tmp)))]))

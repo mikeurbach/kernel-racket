@@ -1,0 +1,6 @@
+#lang br
+(require brag/support syntax-color/racket-lexer)
+
+(define jsonic-lexer
+  (lexer
+   ...))

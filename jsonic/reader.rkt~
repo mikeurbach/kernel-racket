@@ -1,0 +1,9 @@
+#lang br/quicklang
+
+(require jsonic/tokenizer jsonic/parser)
+
+(define (read-syntax path port)
+  (define parse-tree (parse path (make-tokenizer port)))
+  (define module-datum `(module jsonic-module jsonic/expander
+                          ,parse-tree))
+  (datum->syntax #f module-datum))

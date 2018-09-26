@@ -1,0 +1,14 @@
+module SGD(examples[10000000][100]) {
+  import random
+
+  weights = [1...100] { 0 } // or: 0 * [1...100]
+  rate = 1 // or: rate[1] = 1
+
+  [1...1_000_000_000] {
+    [1...1000] {
+      weights -= 
+    }
+  }
+
+  weights
+}
