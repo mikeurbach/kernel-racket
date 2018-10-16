@@ -59,7 +59,7 @@
         [(eq? (car instruction) 'restore)
          (make-restore instruction machine stack pc)]
         [(eq? (car instruction) 'perform)
-         (make-restore instruction machine stack pc)]
+         (make-perform instruction machine labels ops pc)]
         [else (error (format "[assemble] unknown instruction ~v" instruction))]))
 
 (define (make-assign instruction machine labels operations pc)

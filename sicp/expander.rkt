@@ -8,14 +8,13 @@
 ; 2. install racket functions
 ; 3. assemble program and make the machine
 
-(require racket/hash)
+(require racket/hash "primitives.rkt")
 (provide (except-out (all-from-out racket) #%module-begin)
          (rename-out [module-begin #%module-begin]))
 
 (define-syntax-rule (module-begin (controller instruction ...))
   (#%module-begin
    (require "machine.rkt")
-   (provide machine (all-from-out "machine.rkt"))
    (define machine
      (make-machine
       (unique-registers
@@ -26,7 +25,8 @@
        (list
         (extract-operations 'instruction)
         ...))
-      '(controller instruction ...)))))
+      '(controller instruction ...)))
+   (machine-start machine)))
 
 (define (unique-registers register-lists)
   (remove-duplicates
@@ -53,8 +53,11 @@
    '()
    register-exprs))
 
+(define (unique-hash-union h1 h2)
+  (hash-union h1 h2 #:combine/key (lambda (k v1 v2) v2)))
+
 (define (unique-operations operation-lists)
-  (foldl hash-union (hasheq) operation-lists))
+  (foldl unique-hash-union (hasheq) operation-lists))
 
 (define (extract-operations instruction)
   (cond [(symbol? instruction) (hasheq)]
@@ -68,12 +71,19 @@
   (filter-tagged-list instruction 'op))
 
 (define (operations operation-exprs)
-  (define ns (make-base-namespace))
   (foldl
    (lambda (e a)
-     (hash-union (hasheq (cadr e) (eval (cadr e) ns)) a))
+     (hash-union
+      (hasheq (cadr e) (operation-procedure (cadr e)))
+      a))
    (hasheq)
    operation-exprs))
+
+(define (operation-procedure name)
+  (parameterize ([current-namespace (make-base-empty-namespace)])
+    (namespace-require 'racket)
+    (namespace-require (quote "primitives.rkt"))
+    (eval name)))
 
 (define (filter-tagged-list exprs symbol)
   (filter
