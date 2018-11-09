@@ -52,10 +52,18 @@
 (define (apply-primitive-procedure p args)
   (apply (cadr p) args))
 
+(define (make-compiled-procedure entry env)
+  (list 'compiled-procedure entry env))
+(define (compiled-procedure? proc)
+  (tagged-list? proc 'compiled-procedure))
+(define (compiled-procedure-entry c-proc) (cadr c-proc))
+(define (compiled-procedure-env c-proc) (caddr c-proc))
+
 (define (empty-arglist) '())
 (define (adjoin-arg arg arglist)
   (append arglist (list arg)))
 
+(define (make-if p c a) (list 'if p c a))
 (define (if? expr) (tagged-list? expr 'if))
 (define (if-predicate expr) (cadr expr))
 (define (if-consequent expr) (caddr expr))
@@ -63,6 +71,33 @@
   (if (not (empty? (cdddr expr)))
       (cadddr expr)
       'false))
+
+(define (cond? expr) (tagged-list? expr 'cond))
+(define (cond-clauses expr) (cdr expr))
+(define (cond-else-clause? clause)
+  (eq? (cond-predicate clause) 'else))
+(define (cond-predicate clause) (car clause))
+(define (cond-actions clause) (cdr clause))
+(define (cond->if expr)
+  (expand-clauses (cond-clauses expr)))
+
+(define (expand-clauses clauses)
+  (if (empty? clauses)
+      'false
+      (let ([first-clause (car clauses)]
+            [other-clauses (cdr clauses)])
+        (if (cond-else-clause? first-clause)
+            (if (empty? other-clauses)
+                (sequence->expr (cond-actions first-clause))
+                (error (format "cond: else clause is not last: ~v" clauses)))
+            (make-if (cond-predicate first-clause)
+                     (sequence->expr (cond-actions first-clause))
+                     (expand-clauses other-clauses))))))
+
+(define (sequence->expr seq)
+  (cond [(empty? seq) seq]
+        [(last-expr? seq) (first-expr seq)]
+        [else (make-begin seq)]))
 
 (define (true? x)
   (not (eq? x false)))
@@ -73,6 +108,7 @@
 (define (lambda-parameters expr) (cadr expr))
 (define (lambda-body expr) (cddr expr))
 
+(define (make-begin seq) (cons 'begin seq))
 (define (begin? expr) (tagged-list? expr 'begin))
 (define (begin-actions expr) (cdr expr))
 (define (last-expr? seq) (empty? (cdr seq)))
