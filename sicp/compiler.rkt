@@ -1,9 +1,26 @@
-#lang racket
+#lang s-exp syntax/module-reader
+"expander.rkt"
+#:read read
+#:read-syntax my-read-syntax
 
-(require "primitives.rkt")
-(provide compile)
+(require racket (except-in "primitives.rkt" false?))
+(provide compiler)
 
-(define (compile expr target linkage)
+(define (my-read-syntax src in)
+  (define input-stx (read-syntax src in))
+  (if (eof-object? input-stx)
+      eof
+      (datum->instructions (syntax->datum input-stx))))
+
+(define (datum->instructions input-datum)
+  (define prelude
+    '((assign env (op get-global-environment))))
+  (define compiled
+    (caddr (compiler input-datum 'val 'next)))
+  (with-syntax ([instructions (cons 'controller (append prelude compiled))])
+    #'instructions))
+
+(define (compiler expr target linkage)
   (cond [(self-evaluating? expr)
          (compile-self-evaluating expr target linkage)]
         [(quoted? expr)
@@ -17,7 +34,7 @@
         [(if? expr)
          (compile-if expr target linkage)]
         [(cond? expr)
-         (compile (cond->if expr) target linkage)]
+         (compiler (cond->if expr) target linkage)]
         [(begin? expr)
          (compile-sequence (begin-actions expr) target linkage)]
         [(lambda? expr)
@@ -46,11 +63,11 @@
    linkage
    (make-instruction-sequence
     (set 'env) (set target)
-    `((assign ,target (op lookup-variable) (const ,expr) (reg env))))))
+    `((assign ,target (op lookup-variable-value) (const ,expr) (reg env))))))
 
 (define (compile-assignment expr target linkage)
   (let ([var (assignment-variable expr)]
-        [code-for-value (compile (assignment-value expr) 'val 'next)])
+        [code-for-value (compiler (assignment-value expr) 'val 'next)])
     (end-with-linkage
      linkage
      (preserving
@@ -64,7 +81,7 @@
 
 (define (compile-definition expr target linkage)
   (let ([var (definition-variable expr)]
-        [code-for-value (compile (definition-value expr) 'val 'next)])
+        [code-for-value (compiler (definition-value expr) 'val 'next)])
     (end-with-linkage
      linkage
      (preserving
@@ -81,9 +98,9 @@
         [f-branch (make-label 'false-branch)]
         [after-if (make-label 'after-if)])
     (let ([consequent-linkage (if (eq? linkage 'next) after-if linkage)])
-      (let ([p-code (compile (if-predicate expr) 'val 'next)]
-            [c-code (compile (if-consequent expr) target consequent-linkage)]
-            [a-code (compile (if-alternative expr) target linkage)])
+      (let ([p-code (compiler (if-predicate expr) 'val 'next)]
+            [c-code (compiler (if-consequent expr) target consequent-linkage)]
+            [a-code (compiler (if-alternative expr) target linkage)])
         (preserving
          '(env continue)
          p-code
@@ -100,10 +117,10 @@
 
 (define (compile-sequence seq target linkage)
   (if (last-expr? seq)
-      (compile (first-expr seq) target linkage)
+      (compiler (first-expr seq) target linkage)
       (preserving
        '(env continue)
-       (compile (first-expr seq) target 'next)
+       (compiler (first-expr seq) target 'next)
        (compile-sequence (rest-exprs seq) target linkage))))
 
 (define (compile-lambda expr target linkage)
@@ -136,9 +153,9 @@
      (compile-sequence (lambda-body expr) 'val 'return))))
 
 (define (compile-application expr target linkage)
-  (let ([proc-code (compile (operator expr) 'proc 'next)]
+  (let ([proc-code (compiler (operator expr) 'proc 'next)]
         [operand-codes
-         (map (lambda (operand) (compile operand 'val 'next)) (operands expr))])
+         (map (lambda (operand) (compiler operand 'val 'next)) (operands expr))])
     (preserving
      '(env continue)
      proc-code
@@ -148,21 +165,22 @@
       (compile-procedure-call target linkage)))))
 
 (define (construct-arglist operand-codes)
-  (if (empty? operand-codes)
-      (make-instruction-sequence (set) (set 'argl) '((assign argl (const ()))))
-      (let ([code-to-get-last-arg
-             (append-instruction-sequences
-              (car operand-codes)
-              (make-instruction-sequence
-               (set 'val)
-               (set 'argl)
-               '((assign argl (op list) (reg val)))))])
-        (if (empty? (cdr operand-codes))
-            code-to-get-last-arg
-            (preserving
-             '(env)
-             code-to-get-last-arg
-             (code-to-get-rest-args (cdr operand-codes)))))))
+  (let ([operand-codes (reverse operand-codes)])
+    (if (null? operand-codes)
+        (make-instruction-sequence (set) (set 'argl) '((assign argl (const ()))))
+        (let ([code-to-get-last-arg
+               (append-instruction-sequences
+                (car operand-codes)
+                (make-instruction-sequence
+                 (set 'val)
+                 (set 'argl)
+                 '((assign argl (op list) (reg val)))))])
+          (if (null? (cdr operand-codes))
+              code-to-get-last-arg
+              (preserving
+               '(env)
+               code-to-get-last-arg
+               (code-to-get-rest-args (cdr operand-codes))))))))
 
 (define (code-to-get-rest-args operand-codes)
   (let ([code-for-next-arg
@@ -173,7 +191,7 @@
            (set 'val 'argl)
            (set 'argl)
            '((assign argl (op cons) (reg val) (reg argl)))))])
-    (if (empty? (cdr operand-codes))
+    (if (null? (cdr operand-codes))
         code-for-next-arg
         (preserving
          '(env)
@@ -202,7 +220,7 @@
            (set 'proc 'argl)
            (set target)
            `((assign ,target (op apply-primitive-procedure) (reg proc) (reg argl)))))))
-       'after-call))))
+       after-call))))
 
 (define all-regs (set 'env 'proc 'val 'argl 'continue))
 
@@ -229,7 +247,7 @@
          (make-instruction-sequence
           (set 'proc 'continue)
           all-regs
-          '((assign val (op compile-procedure-entry) (reg proc))
+          '((assign val (op compiled-procedure-entry) (reg proc))
             (goto (reg val))))]
         [(and (not (eq? target 'val)) (eq? linkage 'return))
          (error (format "compile: return linkage, target not val: ~v" target))]))
@@ -277,7 +295,7 @@
                 (registers-modified seq2))
      (append (statements seq1) (statements seq2))))
   (define (reduce-seqs seqs)
-    (if (empty? seqs)
+    (if (null? seqs)
         (empty-instruction-sequence)
         (combine-seqs (car seqs)
                       (reduce-seqs (cdr seqs)))))
@@ -298,7 +316,7 @@
    (append (statements seq1) (statements seq2))))
 
 (define (preserving regs seq1 seq2)
-  (if (empty? regs)
+  (if (null? regs)
       (append-instruction-sequences seq1 seq2)
       (let ([first-reg (car regs)])
         (if (and (needs-register? seq2 first-reg)

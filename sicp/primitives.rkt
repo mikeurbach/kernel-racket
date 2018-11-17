@@ -165,7 +165,7 @@
     (add-binding-to-frame! frame var val)))
 
 (define primitive-procedures
-  '(empty? eq? cons car cdr cadr cddr + * - / foldl map length flatten))
+  '(empty? eq? cons car cdr cadr cddr = + * - / foldl map length flatten))
 
 (define (make-primitive-procedure name)
   `(primitive ,(eval name)))
@@ -190,3 +190,6 @@
 
 (define (user-print obj)
   (display obj))
+
+(define (user-println obj)
+  (displayln obj))

@@ -1,6 +1,7 @@
 #lang s-exp "expander.rkt"
 
 (controller
+ (goto (label read-eval-print-loop))
 
  eval-dispatch
  (test (op self-evaluating?) (reg exp))
@@ -91,6 +92,8 @@
  (branch (label primitive-apply))
  (test (op compound-procedure?) (reg proc))
  (branch (label compound-apply))
+ (test (op compiled-procedure?) (reg proc))
+ (branch (label compiled-apply))
  (goto (label unknown-procedure-type))
 
  primitive-apply
@@ -104,6 +107,11 @@
  (assign env (op extend-environment) (reg unev) (reg argl) (reg env))
  (assign unev (op procedure-body) (reg proc))
  (goto (label ev-sequence))
+
+ compiled-apply
+ (restore continue)
+ (assign val (op compiled-procedure-entry) (reg proc))
+ (goto (reg val))
 
  ev-begin
  (assign unev (op begin-actions) (reg exp))

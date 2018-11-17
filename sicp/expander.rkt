@@ -15,6 +15,7 @@
 (define-syntax-rule (module-begin (controller instruction ...))
   (#%module-begin
    (require "machine.rkt")
+   (provide machine (all-from-out "machine.rkt"))
    (define machine
      (make-machine
       (unique-registers
@@ -25,8 +26,7 @@
        (list
         (extract-operations 'instruction)
         ...))
-      '(controller instruction ...)))
-   (machine-start machine)))
+      '(controller instruction ...)))))
 
 (define (unique-registers register-lists)
   (remove-duplicates
