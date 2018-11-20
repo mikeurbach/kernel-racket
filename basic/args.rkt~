@@ -1,2 +1,0 @@
-#lang br
-(current-command-line-args)

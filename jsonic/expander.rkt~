@@ -1,5 +1,0 @@
-#lang br/quicklang
-
-(define-macro (jsonic-module-begin PARSE-TREE)
-  #'(#%module-begin
-     ...))
