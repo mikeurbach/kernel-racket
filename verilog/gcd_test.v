@@ -8,7 +8,7 @@ module gcd_test;
 
    gcd dut(clk, rst, a, b, ret, done);
 
-   always #10 clk = ~clk;
+   always #1 clk = ~clk;
 
    initial begin
       begin
@@ -28,7 +28,7 @@ module gcd_test;
          $finish;
       end
 
-      #35 rst = 0;
+      #2 rst = 0;
 
       wait (done) $display("ret=%d", ret);
       $finish;
