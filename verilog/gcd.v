@@ -19,9 +19,13 @@ module gcd(clk, rst, a_in, b_in, ret_out, done_out);
    reg [7:0] b;
    reg [7:0] ret_out;
    reg       done_out;
-   wire      finished;
 
-   assign finished = b == 0;
+   reg [7:0] a_next;
+   reg [7:0] b_next;
+   reg [7:0] ret_out_next;
+   wire       done;
+
+   assign done = b == 0;
 
    always @(posedge clk)
      begin
@@ -36,24 +40,33 @@ module gcd(clk, rst, a_in, b_in, ret_out, done_out);
         else
           begin
              state <= state_next;
-             a <= b;
-             b <= a % b;
-             ret_out <= a;
-             done_out <= finished;
+             a <= a_next;
+             b <= b_next;
+             ret_out <= ret_out_next;
+             done_out <= done;
           end
      end
 
    always @(*)
      begin
         state_next = state;
-        
+        a_next = a;
+        b_next = b;
+        ret_out_next = ret_out;
+
         case(1'b1)
           state[START_IDX]: begin
              state_next = COMPUTE;
           end
           state[COMPUTE_IDX]: begin
-             if (finished)
-               state_next = DONE;
+             if (done)
+               begin
+                  state_next = DONE;
+                  ret_out_next = a;
+               end
+
+             a_next = b;
+             b_next = a % b;
           end
           state[DONE_IDX]: begin
           end
