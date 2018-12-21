@@ -1,10 +1,10 @@
-module gcd(clk, rst, a_in, b_in, ret_out, done_out);
+module gcd(clk, start, a_in, b_in, done_out, ret_out);
    input        clk;
-   input        rst;
+   input        start;
    input [7:0]  a_in;
    input [7:0]  b_in;
-   output [7:0] ret_out;
    output       done_out;
+   output [7:0] ret_out;
 
    localparam START      = 4'b0001;
    localparam CHECK      = 4'b0010;
@@ -24,7 +24,7 @@ module gcd(clk, rst, a_in, b_in, ret_out, done_out);
 
    always @(posedge clk)
      begin
-        if (rst)
+        if (start)
           begin
              state <= START;
              a <= a_in;
