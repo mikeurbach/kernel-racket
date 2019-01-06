@@ -1,27 +1,25 @@
 #lang racket
 
-(require "environment.rkt" "combiner.rkt")
+(require "environment.rkt" "combiner.rkt" "pair.rkt")
 
-(provide (rename-out [kernel-eval eval]))
+(provide kernel-eval)
 
-(define (mc-eval expr env)
+(define (kernel-eval expr env)
   (cond [(symbol? expr) (lookup expr env)]
         [(pair? expr)
-         (combine (mc-eval (mcar expr) env)
+         (combine (kernel-eval (mcar expr) env)
                   (mcdr expr)
                   env)]
         [#t expr]))
 
-(define (mc-eval-list exprs env)
+(define (kernel-eval-list exprs env)
   (map
-   (lambda (expr) (mc-eval expr env))
+   (lambda (expr) (kernel-eval expr env))
    exprs))
 
 (define (combine combiner operands env)
   (if (operative? combiner)
       (operate combiner operands env)
-      (combine (unwrap combiner)
-               (mc-eval-list operands env)
+      (combine (kernel-unwrap combiner)
+               (kernel-eval-list operands env)
                env)))
-
-(define kernel-eval (make-applicative mc-eval))

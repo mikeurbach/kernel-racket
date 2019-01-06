@@ -2,7 +2,7 @@
 
 (require "symbol.rkt" "pair.rkt" rackunit)
 
-(provide environment? ignore? make-environment lookup)
+(provide environment? ignore? make-environment bind! lookup)
 
 (struct environment (locals parents))
 (struct not-found ())
@@ -18,6 +18,9 @@
     (if (not-found? result)
         (error 'lookup "symbol ~v not found" symbol)
         result)))
+
+(define (bind! environment symbol value)
+  (hash-set! (environment-locals environment) symbol value))
 
 (define (lookup-helper symbol env)
   (hash-ref (environment-locals env) symbol

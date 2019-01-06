@@ -1,20 +1,18 @@
 #lang racket
 
 (require
- "core/boolean.rkt"
- "core/equivalence-under-mutation.rkt"
- "core/equivalence-up-to-mutation.rkt"
- "core/symbol.rkt"
+ "core/combiner.rkt"
  "core/control.rkt"
- "core/pair.rkt"
- "core/pair-mutation.rkt"
+ "core/environment.rkt"
+ "core/evaluator.rkt"
  )
 
-(provide
- (all-from-out "core/boolean.rkt")
- (all-from-out "core/equivalence-under-mutation.rkt")
- (all-from-out "core/symbol.rkt")
- (all-from-out "core/control.rkt")
- (all-from-out "core/pair.rkt")
- (all-from-out "core/pair-mutation.rkt")
- )
+(define ground-environment (make-environment '()))
+
+(bind! ground-environment 'eval (make-applicative kernel-eval))
+(bind! ground-environment 'wrap (make-applicative kernel-wrap))
+(bind! ground-environment 'unwrap (make-applicative kernel-unwrap))
+(bind! ground-environment '$if (make-operative kernel-if))
+; TODO: $vau
+; TODO: $define!
+; TODO: ?
