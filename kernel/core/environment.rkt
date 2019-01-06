@@ -18,13 +18,14 @@
         [(kernel-ignore? ptree) '|#ignore|]
         [(kernel-null? ptree)
          (when (not (kernel-null? expr))
-           (error '$define "ptree is nil but expr is ~v" expr))]
+           (error '$match "ptree is nil but expr is ~v" expr))]
         [(kernel-pair? ptree)
          (if (not (kernel-pair? expr))
-             (error '$define "ptree is a pair but expr is ~v" expr)
+             (error '$match "ptree is a pair but expr is ~v" expr)
              (begin
                (match! (mcar ptree) (mcar expr) env)
-               (match! (mcdr ptree) (mcdr expr) env)))]))
+               (match! (mcdr ptree) (mcdr expr) env)))]
+        [#t (error '$match "unable to match ~v" ptree)]))
 
 (define (bind! environment symbol value)
   (hash-set! (environment-locals environment) symbol value))
