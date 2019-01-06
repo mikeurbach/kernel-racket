@@ -18,7 +18,7 @@
 (bind! ground-environment 'cons (make-applicative kernel-cons))
 (bind! ground-environment '$if (make-operative kernel-if))
 (bind! ground-environment '$define (make-operative kernel-define))
-; TODO: $vau
+(bind! ground-environment '$vau (make-operative kernel-vau))
 ; TODO: the rest
 
 (define (make-ground-environment)

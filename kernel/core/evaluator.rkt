@@ -2,7 +2,7 @@
 
 (require "environment.rkt" "combiner.rkt" "pair.rkt" "symbol.rkt")
 
-(provide kernel-eval)
+(provide kernel-eval kernel-vau)
 
 (define (kernel-eval expr env)
   (cond [(kernel-symbol? expr) (lookup expr env)]
@@ -23,3 +23,14 @@
       (combine (kernel-unwrap combiner)
                (kernel-eval-list operands env)
                env)))
+
+(define (kernel-vau args static-env)
+  (letrec ([ptree (car args)]
+           [eparam (cadr args)]
+           [body (caddr args)])
+    (make-operative
+     (lambda (operands dynamic-env)
+       (let ([local-env (make-environment static-env)])
+         (match! ptree operands local-env)
+         (match! eparam dynamic-env local-env)
+         (kernel-eval body local-env))))))
