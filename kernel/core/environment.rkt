@@ -23,8 +23,8 @@
          (if (not (kernel-pair? expr))
              (error '$match "ptree is a pair but expr is ~v" expr)
              (begin
-               (match! (mcar ptree) (mcar expr) env)
-               (match! (mcdr ptree) (mcdr expr) env)))]
+               (match! (car ptree) (car expr) env)
+               (match! (cdr ptree) (cdr expr) env)))]
         [#t (error '$match "unable to match ~v" ptree)]))
 
 (define (bind! environment symbol value)

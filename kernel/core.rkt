@@ -25,15 +25,24 @@
   (make-environment (list ground-environment)))
 
 (test-begin
-  (let ([truthy (mcons '$if (mcons #t (mcons 1 (mcons 2 '()))))]
-        [falsey (mcons '$if (mcons #f (mcons 1 (mcons 2 '()))))]
-        [throws (mcons '$if (mcons 3 (mcons 1 (mcons 2 '()))))])
+  (let ([truthy '($if #t 1 2)]
+        [falsey '($if #f 1 2)]
+        [throws '($if 3  1 2)])
     (check-eq? (kernel-eval truthy (make-ground-environment)) 1)
     (check-eq? (kernel-eval falsey (make-ground-environment)) 2)
     (check-exn exn:fail? (lambda () (kernel-eval throws (make-ground-environment))))))
 
 (test-begin
   (letrec ([env (make-ground-environment)]
-           [single (kernel-eval (mcons '$define (mcons 'a 1)) env)])
-    (check-true (kernel-inert? single))
-    (check-eq? (kernel-eval 'a env) 1)))
+           [symbol (kernel-eval '($define a 1) env)]
+           [pair (kernel-eval '($define (b . c) (cons 420 69)) env)]
+           [list (kernel-eval '($define (d e f) (cons 6 (cons 7 (cons 8 ())))) env)])
+    (check-true (kernel-inert? symbol))
+    (check-true (kernel-inert? pair))
+    (check-true (kernel-inert? list))
+    (check-eq? (kernel-eval 'a env) 1)
+    (check-eq? (kernel-eval 'b env) 420)
+    (check-eq? (kernel-eval 'c env) 69)
+    (check-eq? (kernel-eval 'd env) 6)
+    (check-eq? (kernel-eval 'e env) 7)
+    (check-eq? (kernel-eval 'f env) 8)))

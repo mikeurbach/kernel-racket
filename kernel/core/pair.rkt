@@ -4,6 +4,6 @@
 
 (define kernel-null? null?)
 
-(define kernel-pair? mpair?)
+(define kernel-pair? pair?)
 
-(define kernel-cons mcons)
+(define kernel-cons cons)

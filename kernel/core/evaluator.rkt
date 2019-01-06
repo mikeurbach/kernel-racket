@@ -7,8 +7,8 @@
 (define (kernel-eval expr env)
   (cond [(kernel-symbol? expr) (lookup expr env)]
         [(kernel-pair? expr)
-         (combine (kernel-eval (mcar expr) env)
-                  (mcdr expr)
+         (combine (kernel-eval (car expr) env)
+                  (cdr expr)
                   env)]
         [#t expr]))
 
