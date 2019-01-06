@@ -1,12 +1,12 @@
 #lang racket
 
-(require "environment.rkt" "combiner.rkt" "pair.rkt")
+(require "environment.rkt" "combiner.rkt" "pair.rkt" "symbol.rkt")
 
 (provide kernel-eval)
 
 (define (kernel-eval expr env)
-  (cond [(symbol? expr) (lookup expr env)]
-        [(pair? expr)
+  (cond [(kernel-symbol? expr) (lookup expr env)]
+        [(kernel-pair? expr)
          (combine (kernel-eval (mcar expr) env)
                   (mcdr expr)
                   env)]

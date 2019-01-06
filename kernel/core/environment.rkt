@@ -2,25 +2,38 @@
 
 (require "symbol.rkt" "pair.rkt" rackunit)
 
-(provide environment? ignore? make-environment bind! lookup)
+(provide environment? kernel-ignore? make-environment match! bind! lookup)
 
 (struct environment (locals parents))
 (struct not-found ())
 
-(define (ignore? object)
+(define (kernel-ignore? object)
   (eqv? object '|#ignore|))
 
 (define (make-environment parents)
   (environment (make-hasheqv) parents))
+
+(define (match! ptree expr env)
+  (cond [(kernel-symbol? ptree) (bind! env ptree expr)]
+        [(kernel-ignore? ptree) '|#ignore|]
+        [(kernel-null? ptree)
+         (when (not (kernel-null? expr))
+           (error '$define "ptree is nil but expr is ~v" expr))]
+        [(kernel-pair? ptree)
+         (if (not (kernel-pair? expr))
+             (error '$define "ptree is a pair but expr is ~v" expr)
+             (begin
+               (match! (mcar ptree) (mcar expr) env)
+               (match! (mcdr ptree) (mcdr expr) env)))]))
+
+(define (bind! environment symbol value)
+  (hash-set! (environment-locals environment) symbol value))
 
 (define (lookup symbol env)
   (let ([result (lookup-helper symbol env)])
     (if (not-found? result)
         (error 'lookup "symbol ~v not found" symbol)
         result)))
-
-(define (bind! environment symbol value)
-  (hash-set! (environment-locals environment) symbol value))
 
 (define (lookup-helper symbol env)
   (hash-ref (environment-locals env) symbol

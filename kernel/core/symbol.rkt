@@ -1,5 +1,5 @@
 #lang racket
 
-(provide (rename-out [kernel-symbol? symbol?]))
+(provide kernel-symbol?)
 
 (define kernel-symbol? symbol?)

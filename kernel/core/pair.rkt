@@ -1,9 +1,6 @@
 #lang racket
 
-(provide
- (rename-out [kernel-null? null?])
- (rename-out [kernel-pair? pair?])
- (rename-out [kernel-cons cons]))
+(provide kernel-null? kernel-pair? kernel-cons)
 
 (define kernel-null? null?)
 
