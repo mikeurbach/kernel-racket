@@ -7,8 +7,6 @@
 
 (define kernel-null? null?)
 
-(define (kernel-pair? object)
-  (or (pair? object)
-      (mpair? object)))
+(define kernel-pair? mpair?)
 
 (define kernel-cons mcons)

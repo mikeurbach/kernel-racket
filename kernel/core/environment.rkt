@@ -1,6 +1,6 @@
 #lang racket
 
-(require "symbol.rkt" rackunit)
+(require "symbol.rkt" "pair.rkt" rackunit)
 
 (provide environment? ignore? make-environment (rename-out [kernel-eval eval]))
 
@@ -10,12 +10,28 @@
 (define (ignore? object)
   (eqv? object '|#ignore|))
 
-(define (kernel-eval expr env)
-  (cond [(symbol? expr) (lookup expr env)]
-        [#t expr]))
-
 (define (make-environment parents)
   (environment (make-hasheqv) parents))
+
+(define (kernel-eval expr env)
+  (cond [(symbol? expr) (lookup expr env)]
+        [(pair? expr)
+         (combine (kernel-eval (mcar expr) env)
+                  (mcdr expr)
+                  env)]
+        [#t expr]))
+
+(define (combine combiner operands env)
+  (if (operative? combiner)
+      (operate combiner operands env)
+      (combine (unwrap combiner)
+               (kernel-eval-list operands env)
+               env)))
+
+(define (kernel-eval-list exprs env)
+  (map
+   (lambda (expr) (kernel-eval expr env))
+   exprs))
 
 (define (lookup symbol env)
   (let ([result (lookup-helper symbol env)])

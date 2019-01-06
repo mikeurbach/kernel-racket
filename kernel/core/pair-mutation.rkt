@@ -10,6 +10,7 @@
 (define (set-cdr! object value)
   (set-mcdr! object value))
 
+; this was an exercise for the reader. the evaluator only works with mutable pairs.
 (define (copy-es-immutable object)
   (if (not (pair? object))
       object
