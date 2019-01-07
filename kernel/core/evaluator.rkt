@@ -5,8 +5,8 @@
 (provide kernel-eval kernel-vau)
 
 (define (kernel-eval expr env)
-  (cond [(kernel-symbol? expr) (lookup expr env)]
-        [(kernel-pair? expr)
+  (cond [(symbol? expr) (lookup expr env)]
+        [(pair? expr)
          (combine (kernel-eval (car expr) env)
                   (cdr expr)
                   env)]

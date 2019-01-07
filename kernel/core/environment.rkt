@@ -49,9 +49,11 @@
          (map
           (lambda (env) (lookup-helper symbol env))
           parents)])
-    (findf (lambda (result)
-             (not (not-found? result)))
-           parent-results)))
+    (if (andmap not-found? parent-results)
+        (not-found)
+        (findf (lambda (result)
+                 (not (not-found? result)))
+               parent-results))))
 
 (test-begin
   (letrec ([blank (environment (hasheqv) '())]

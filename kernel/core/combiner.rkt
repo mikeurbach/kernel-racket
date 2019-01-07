@@ -1,7 +1,7 @@
 #lang racket
 
 (provide make-operative operative? operate
-         make-applicative kernel-wrap kernel-unwrap)
+         make-applicative applicative? kernel-wrap kernel-unwrap)
 
 (struct operative (proc))
 (struct applicative (proc))
@@ -12,7 +12,6 @@
 (define (operate combiner operands env)
   ((operative-proc combiner) operands env))
 
-; we're going to override lamda and apply in the library
 (define (make-applicative proc)
   (kernel-wrap
    (make-operative

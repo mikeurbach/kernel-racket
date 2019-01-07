@@ -1,5 +1,5 @@
 #lang racket
 
-(provide (rename-out [kernel-eq? eq?]))
+(provide kernel-eq?)
 
-(define kernel-eq? eqv?)
+(define kernel-eq? eq?)

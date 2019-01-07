@@ -1,5 +1,5 @@
 #lang racket
 
-(provide (rename-out [kernel-boolean? boolean?]))
+(provide kernel-boolean?)
 
 (define kernel-boolean? boolean?)
