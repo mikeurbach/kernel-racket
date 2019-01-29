@@ -15,9 +15,26 @@
  rackunit
  )
 
-(provide make-ground-environment kernel-eval)
+(provide
+ (rename-out [module-begin #%module-begin]
+             [top-interaction #%top-interaction]))
+
+(define-syntax-rule (module-begin expr)
+  (#%module-begin
+   (kernel-eval 'expr global-env)))
+
+(define-syntax-rule (top-interaction . expr)
+  (kernel-eval 'expr global-env))
 
 (define ground-environment (make-environment '()))
+
+(define (make-ground-environment)
+  (make-environment (list ground-environment)))
+
+(define global-env (make-ground-environment))
+
+(define (show-global-environment)
+  (show-environment global-env))
 
 (bind! ground-environment 'boolean? (make-applicative kernel-boolean?))
 (bind! ground-environment 'eq? (make-applicative kernel-eq?))
@@ -41,9 +58,7 @@
 (bind! ground-environment '$vau (make-operative kernel-vau))
 (bind! ground-environment 'wrap (make-applicative kernel-wrap))
 (bind! ground-environment 'unwrap (make-applicative kernel-unwrap))
-
-(define (make-ground-environment)
-  (make-environment (list ground-environment)))
+(bind! ground-environment 'show-environment (make-applicative show-global-environment))
 
 (test-begin
   (let ([truthy '($if #t 1 2)]

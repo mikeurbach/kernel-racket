@@ -28,9 +28,10 @@
   (letrec ([ptree (car args)]
            [eparam (cadr args)]
            [body (caddr args)])
+    (displayln (format "$vau: ptree = ~v, eparam = ~v" ptree eparam))
     (make-operative
      (lambda (operands dynamic-env)
-       (let ([local-env (make-environment static-env)])
+       (let ([local-env (make-environment (list static-env))])
          (match! ptree operands local-env)
          (match! eparam dynamic-env local-env)
          (kernel-eval body local-env))))))

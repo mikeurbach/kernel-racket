@@ -2,7 +2,7 @@
 
 (require "symbol.rkt" "pair.rkt" rackunit)
 
-(provide environment? kernel-ignore? make-environment match! bind! lookup)
+(provide environment? kernel-ignore? make-environment show-environment match! bind! lookup)
 
 (struct environment (locals parents))
 (struct not-found ())
@@ -14,6 +14,7 @@
   (environment (make-hasheqv) parents))
 
 (define (match! ptree expr env)
+  (displayln (format "match!: ptree = ~v, expr = ~v" ptree expr))
   (cond [(kernel-symbol? ptree) (bind! env ptree expr)]
         [(kernel-ignore? ptree) '|#ignore|]
         [(kernel-null? ptree)
@@ -40,6 +41,7 @@
   (hash-ref (environment-locals env) symbol
             (lambda ()
               (let ([parents (environment-parents env)])
+                (displayln (format "lookup-helper: symbol = ~v, env = ~v, parents = ~v" symbol env parents))
                 (if (empty? parents)
                     (not-found)
                     (lookup-in-parents symbol parents))))))
@@ -54,6 +56,12 @@
         (findf (lambda (result)
                  (not (not-found? result)))
                parent-results))))
+
+(define (show-environment env)
+  (for ([key (hash-keys (environment-locals env))])
+    (displayln (format "~v: ~v" key (hash-ref (environment-locals env) key))))
+  (for ([parent (environment-parents env)])
+    (show-environment parent)))
 
 (test-begin
   (letrec ([blank (environment (hasheqv) '())]
