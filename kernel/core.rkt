@@ -19,9 +19,11 @@
  (rename-out [module-begin #%module-begin]
              [top-interaction #%top-interaction]))
 
-(define-syntax-rule (module-begin expr)
+(define-syntax-rule (module-begin expr ...)
   (#%module-begin
-   (kernel-eval 'expr global-env)))
+   (begin
+     (kernel-eval 'expr global-env)
+     ...)))
 
 (define-syntax-rule (top-interaction . expr)
   (kernel-eval 'expr global-env))
