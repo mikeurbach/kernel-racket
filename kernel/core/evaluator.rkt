@@ -5,8 +5,8 @@
 (provide kernel-eval kernel-vau)
 
 (define (kernel-eval expr env)
-  (cond [(symbol? expr) (lookup expr env)]
-        [(pair? expr)
+  (cond [(kernel-symbol? expr) (lookup expr env)]
+        [(kernel-pair? expr)
          (combine (kernel-eval (car expr) env)
                   (cdr expr)
                   env)]
@@ -28,7 +28,7 @@
   (letrec ([ptree (car args)]
            [eparam (cadr args)]
            [body (caddr args)])
-    (displayln (format "$vau: ptree = ~v, eparam = ~v" ptree eparam))
+    ;; (displayln (format "$vau: ptree = ~v, eparam = ~v" ptree eparam))
     (make-operative
      (lambda (operands dynamic-env)
        (let ([local-env (make-environment (list static-env))])

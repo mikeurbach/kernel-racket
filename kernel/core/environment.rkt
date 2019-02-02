@@ -14,9 +14,9 @@
   (environment (make-hasheqv) parents))
 
 (define (match! ptree expr env)
-  (displayln (format "match!: ptree = ~v, expr = ~v" ptree expr))
-  (cond [(kernel-symbol? ptree) (bind! env ptree expr)]
-        [(kernel-ignore? ptree) '|#ignore|]
+  ;; (displayln (format "match!: ptree = ~v, expr = ~v" ptree expr))
+  (cond [(kernel-ignore? ptree) '|#ignore|]
+        [(kernel-symbol? ptree) (bind! env ptree expr)]
         [(kernel-null? ptree)
          (when (not (kernel-null? expr))
            (error '$match "ptree is nil but expr is ~v" expr))]
@@ -28,8 +28,8 @@
                (match! (cdr ptree) (cdr expr) env)))]
         [#t (error '$match "unable to match ~v" ptree)]))
 
-(define (bind! environment symbol value)
-  (hash-set! (environment-locals environment) symbol value))
+(define (bind! env symbol value)
+  (hash-set! (environment-locals env) symbol value))
 
 (define (lookup symbol env)
   (let ([result (lookup-helper symbol env)])
@@ -41,7 +41,7 @@
   (hash-ref (environment-locals env) symbol
             (lambda ()
               (let ([parents (environment-parents env)])
-                (displayln (format "lookup-helper: symbol = ~v, env = ~v, parents = ~v" symbol env parents))
+                ;; (displayln (format "lookup-helper: symbol = ~v, env = ~v, parents = ~v" symbol env parents))
                 (if (empty? parents)
                     (not-found)
                     (lookup-in-parents symbol parents))))))
