@@ -46,3 +46,7 @@
   ($vau (formals . body) env
     (wrap (eval (list* $vau formals |#ignore| body)
                 env))))
+
+;; 5.4 Pairs and Lists
+($define! car ($lambda ((object . |#ignore|)) object))
+($define! cdr ($lambda ((|#ignore| . object)) object))
