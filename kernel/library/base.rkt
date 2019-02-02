@@ -50,3 +50,11 @@
 ;; 5.4 Pairs and Lists
 ($define! car ($lambda ((object . |#ignore|)) object))
 ($define! cdr ($lambda ((|#ignore| . object)) object))
+
+;; 5.5 Combiners
+($define! apply
+  ($lambda (applicative arg . opt)
+    (eval (cons (unwrap applicative) arg)
+          ($if (null? opt)
+            (make-environment ())
+            (car opt)))))
