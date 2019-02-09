@@ -50,6 +50,10 @@
 ;; 5.4 Pairs and Lists
 ($define! car ($lambda ((object . |#ignore|)) object))
 ($define! cdr ($lambda ((|#ignore| . object)) object))
+($define! caar ($lambda (((object . |#ignore|) . |#ignore|)) object))
+($define! cdar ($lambda (((|#ignore| . object) . |#ignore|)) object))
+($define! cadr ($lambda ((|#ignore| object . |#ignore|)) object))
+($define! cddr ($lambda ((|#ignore| |#ignore| . object)) object))
 
 ;; 5.5 Combiners
 ($define! apply
@@ -67,3 +71,9 @@
                   ($if (null? (cdr lists))
                     ()
                     (map applicative (cdr lists))))))))
+
+($define! $let
+  ($vau (bindings . body) env
+    (eval (cons (list* $lambda (map car bindings) body)
+                (map cadr bindings))
+          env)))
