@@ -22,7 +22,7 @@
            (error '$match "ptree is nil but expr is ~v" expr))]
         [(kernel-pair? ptree)
          (if (not (kernel-pair? expr))
-             (error '$match "ptree is a pair but expr is ~v" expr)
+             (error '$match "ptree is ~v but expr is ~v" ptree expr)
              (begin
                (match! (car ptree) (car expr) env)
                (match! (cdr ptree) (cdr expr) env)))]

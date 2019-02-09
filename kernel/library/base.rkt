@@ -58,3 +58,12 @@
           ($if (null? opt)
             (make-environment ())
             (car opt)))))
+
+($define! map
+  (wrap ($vau (applicative . lists) env
+          ($if (null? lists)
+            (displayln "error: map was not supplied lists")
+            (cons (apply applicative (list (car lists)) env)
+                ($if (null? (cdr lists))
+                  ()
+                  (apply map (cons applicative (cdr lists)) env)))))))
