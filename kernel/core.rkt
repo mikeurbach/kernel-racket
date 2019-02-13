@@ -16,6 +16,7 @@
  )
 
 (provide
+ kernel-eval global-env ;; TODO: try not to expose these
  (rename-out [module-begin #%module-begin]
              [top-interaction #%top-interaction]))
 
