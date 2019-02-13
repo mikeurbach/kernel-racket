@@ -3,17 +3,11 @@
 (require
  "core.rkt"
  "library/base.rkt"
- rackunit
  )
 
-(provide
- (rename-out [module-begin #%module-begin]
-             [top-interaction #%top-interaction]))
+;; by requiring core, we've overridden #%module-begin and #%top-interaction.
+;; by requiring the library files, we've mutated the global environment used by core.
+;; now we can simply provide the same #%module-begin and #%top-interaction from core,
+;; and the compound combiners defined in the library are layered on top.
 
-(define-syntax-rule (module-begin expr ...)
-  (#%module-begin
-   expr
-   ...))
-
-(define-syntax-rule (top-interaction . expr)
-  (kernel-eval 'expr global-env))
+(provide #%module-begin #%top-interaction)
