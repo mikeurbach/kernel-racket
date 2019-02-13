@@ -61,7 +61,6 @@
 (bind! ground-environment 'wrap (make-applicative kernel-wrap))
 (bind! ground-environment 'unwrap (make-applicative kernel-unwrap))
 (bind! ground-environment 'show-environment (make-applicative show-global-environment))
-(bind! ground-environment 'displayln (make-applicative displayln))
 
 (test-begin
   (let ([truthy '($if #t 1 2)]

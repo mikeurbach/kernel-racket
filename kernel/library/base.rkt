@@ -65,12 +65,10 @@
 
 ($define! map
   (wrap ($vau (applicative lists) env
-          ($if (null? lists)
-            (displayln "error: map was not supplied lists")
-            (cons (applicative (car lists))
-                  ($if (null? (cdr lists))
-                    ()
-                    (map applicative (cdr lists))))))))
+          (cons (applicative (car lists))
+                ($if (null? (cdr lists))
+                  ()
+                  (map applicative (cdr lists)))))))
 
 ($define! $let
   ($vau (bindings . body) env
