@@ -2,10 +2,13 @@
 
 (require "boolean.rkt" "evaluator.rkt")
 
-(provide kernel-inert? kernel-if)
+(provide kernel-inert kernel-inert? kernel-if)
+
+(define (kernel-inert)
+  (void))
 
 (define (kernel-inert? object)
-  (eqv? object '|#inert|))
+  (void? object))
 
 (define (kernel-if args env)
   (letrec ([predicate (car args)]

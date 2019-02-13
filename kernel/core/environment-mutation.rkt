@@ -1,6 +1,6 @@
 #lang racket
 
-(require "environment.rkt" "evaluator.rkt")
+(require "environment.rkt" "evaluator.rkt" "control.rkt")
 
 (provide kernel-define!)
 
@@ -9,4 +9,4 @@
            [expr (cadr args)]
            [result (kernel-eval expr env)])
     (match! ptree result env)
-    '|#inert|))
+    (kernel-inert)))

@@ -13,7 +13,7 @@
                    (eval (cons $aux tail) env)))))
             ($vau body env
               ($if (null? body)
-                |#inert|
+                (inert)
                 (eval (cons $aux body) env))))))
    ($vau (first second) env
      ((wrap ($vau |#ignore| |#ignore| (eval second env)))
