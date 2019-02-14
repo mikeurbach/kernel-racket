@@ -1,6 +1,0 @@
-module := "module" lambda
-statement := import | definition | expression
-import := "import" + identifier
-definition := identifier "=" expression
-expression := lambda | math | boolean | identifier | literal
-lambda := "(" typed-identifier? ("," typed-identifier)* ")" "->" expression | "{" statement* expression "}"
