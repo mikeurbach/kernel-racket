@@ -39,4 +39,8 @@
 **** Kernel
 *** Why Lisp/Scheme?
 * Kernel
+** R1RK
+*** Addition of Types
+*** Only Core Type is Immutable Pair
 * Register Machines
+** SICP Chapter 5
