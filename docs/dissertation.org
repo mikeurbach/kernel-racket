@@ -1,0 +1,42 @@
+#+TITLE: Working Title
+#+AUTHOR: Mike Urbach
+
+* Introduction
+** Catchy intro
+** History of von Neumann Architecture
+*** Origin
+*** Rise
+**** Time Sharing
+**** Interactive Computing
+**** Mobile Computing
+*** Fall
+**** Physical Limits on Frequency
+**** Processor Manufacturers' Response
+***** Ever growing ISAs
+***** Speculative Execution
+**** Repurcussions
+***** Spectre, Meltdown, etc.
+***** Rise of RISC-V
+** Thesis
+* Background
+** FP/FFP
+*** John Backus' Design Goals
+*** Actual Implementations
+**** Original Lecture
+**** Dybvig Virtual Machine
+*** Why Not FP/FFP?
+** Smalltalk
+*** Alan Kay's Design Goals
+*** Actual Implementations
+**** Xerox Parc
+**** Smalltalk 80 (or whichever was released outside Xerox)
+*** Why Not Smalltalk?
+** Lisp
+*** John McCarthy's Design Goals
+*** Actual Implementations
+**** Scheme
+**** Arc
+**** Kernel
+*** Why Lisp/Scheme?
+* Kernel
+* Register Machines

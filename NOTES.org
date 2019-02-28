@@ -1,0 +1,8 @@
+* Dissertation
+** TODO introduction section
+** TODO background section
+** TODO kernel section
+* Kernel
+** TODO explore using a struct instead of the actual symbol |#ignore|
+** TODO write more unit tests for core and library
+** TODO add built-in combiner to create new types use it uniformly for ignore, inert, pair, boolean, etc.
