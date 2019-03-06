@@ -6,3 +6,31 @@
 ** TODO explore using a struct instead of the actual symbol |#ignore|
 ** TODO write more unit tests for core and library
 ** TODO add built-in combiner to create new types use it uniformly for ignore, inert, pair, boolean, etc.
+*** Idea 1:
+Consider the following form:
+
+($type pair
+  (data
+    (car any)
+    (cdr any))
+  (reader
+    ...))
+
+This $type form performs the following:
+
+1. Create a constructor named `pair` to construct objects of the `pair` type, which expects two arguments of the `any` type
+2. Create a predicate named `pair?`, which expects one argument, and returns true iff the argument is an object of the `pair` type
+3. Creates functions named `car` and `cdr`, which each expect one argument of the `pair` type, and return the datum passed to the pair's constructor in the first and second argument, respectively
+4. Modifies reader ...
+5. Potentially forms for defining functions and axioms
+*** Idea 2:
+Classical, recursive ADT, a-la Haskell
+
+($type (pair any)
+  ()
+  (cons any (pair any)))
+
+This $type form performs the following:
+
+1. Modifies reader to add support for `()` and `(cons a b)` forms, which read into pair objects
+2. Creates a predicate named `pair?` which expects one argument and returns true iff the argument is an object of the `pair` type
