@@ -70,8 +70,19 @@
                   ()
                   (map applicative (cdr lists)))))))
 
+;; 5.10 Environments
 ($define! $let
   ($vau (bindings . body) env
     (eval (cons (list* $lambda (map car bindings) body)
                 (map cadr bindings))
           env)))
+
+;; 5.6 Control
+($define! $cond
+  ($vau clauses env
+    ($if (null? clauses)
+      (inert)
+      ($let ((((test . body) . rest) clauses))
+        ($if (eval test env)
+          (eval (list* $sequence body) env)
+          (eval (list* $cond rest) env))))))
