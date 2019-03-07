@@ -10,7 +10,6 @@
  "src/core/equivalence-up-to-mutation.rkt"
  "src/core/evaluator.rkt"
  "src/core/pair.rkt"
- "src/core/pair-mutation.rkt"
  "src/core/symbol.rkt"
  rackunit
  )
@@ -48,9 +47,6 @@
 (bind! ground-environment 'pair? (make-applicative kernel-pair?))
 (bind! ground-environment 'null? (make-applicative kernel-null?))
 (bind! ground-environment 'cons (make-applicative kernel-cons))
-(bind! ground-environment 'set-car! (make-applicative kernel-set-car!))
-(bind! ground-environment 'set-cdr! (make-applicative kernel-set-cdr!))
-(bind! ground-environment 'copy-es-immutable (make-applicative kernel-copy-es-immutable))
 (bind! ground-environment 'environment? (make-applicative environment?))
 (bind! ground-environment 'ignore? (make-applicative kernel-ignore?))
 (bind! ground-environment 'eval (make-applicative kernel-eval))
