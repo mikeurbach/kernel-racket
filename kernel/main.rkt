@@ -2,7 +2,7 @@
 
 (require
  "core.rkt"
- "library/base.rkt"
+ "src/library/base.rkt"
  )
 
 ;; by requiring core, we've overridden #%module-begin and #%top-interaction.

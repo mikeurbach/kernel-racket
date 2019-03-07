@@ -1,17 +1,17 @@
 #lang racket
 
 (require
- "core/boolean.rkt"
- "core/combiner.rkt"
- "core/control.rkt"
- "core/environment.rkt"
- "core/environment-mutation.rkt"
- "core/equivalence-under-mutation.rkt"
- "core/equivalence-up-to-mutation.rkt"
- "core/evaluator.rkt"
- "core/pair.rkt"
- "core/pair-mutation.rkt"
- "core/symbol.rkt"
+ "src/core/boolean.rkt"
+ "src/core/combiner.rkt"
+ "src/core/control.rkt"
+ "src/core/environment.rkt"
+ "src/core/environment-mutation.rkt"
+ "src/core/equivalence-under-mutation.rkt"
+ "src/core/equivalence-up-to-mutation.rkt"
+ "src/core/evaluator.rkt"
+ "src/core/pair.rkt"
+ "src/core/pair-mutation.rkt"
+ "src/core/symbol.rkt"
  rackunit
  )
 
@@ -61,27 +61,6 @@
 (bind! ground-environment '$vau (make-operative kernel-vau))
 (bind! ground-environment 'wrap (make-applicative kernel-wrap))
 (bind! ground-environment 'unwrap (make-applicative kernel-unwrap))
-(bind! ground-environment 'show-environment (make-applicative show-global-environment))
-
-(test-begin
-  (let ([truthy '($if #t 1 2)]
-        [falsey '($if #f 1 2)]
-        [throws '($if 3  1 2)])
-    (check-eq? (kernel-eval truthy (make-ground-environment)) 1)
-    (check-eq? (kernel-eval falsey (make-ground-environment)) 2)
-    (check-exn exn:fail? (lambda () (kernel-eval throws (make-ground-environment))))))
-
-(test-begin
-  (letrec ([env (make-ground-environment)]
-           [symbol (kernel-eval '($define! a 1) env)]
-           [pair (kernel-eval '($define! (b . c) (cons 420 69)) env)]
-           [list (kernel-eval '($define! (d e f) (cons 6 (cons 7 (cons 8 ())))) env)])
-    (check-true (kernel-inert? symbol))
-    (check-true (kernel-inert? pair))
-    (check-true (kernel-inert? list))
-    (check-eq? (kernel-eval 'a env) 1)
-    (check-eq? (kernel-eval 'b env) 420)
-    (check-eq? (kernel-eval 'c env) 69)
-    (check-eq? (kernel-eval 'd env) 6)
-    (check-eq? (kernel-eval 'e env) 7)
-    (check-eq? (kernel-eval 'f env) 8)))
+(bind! ground-environment 'show-global-environment (make-applicative show-global-environment))
+(bind! ground-environment 'make-ground-environment (make-applicative make-ground-environment))
+(bind! ground-environment 'check-eq? (make-applicative check-eq?))

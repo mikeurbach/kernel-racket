@@ -5,6 +5,7 @@
 * Kernel
 ** TODO explore using a struct instead of the actual symbol |#ignore|
 ** TODO write more unit tests for core and library
+*** TODO worth adding in check-exn?
 ** TODO add built-in combiner to create new types use it uniformly for ignore, inert, pair, boolean, etc.
 *** Idea 1:
 Consider the following form:
@@ -34,3 +35,5 @@ This $type form performs the following:
 
 1. Modifies reader to add support for `()` and `(cons a b)` forms, which read into pair objects
 2. Creates a predicate named `pair?` which expects one argument and returns true iff the argument is an object of the `pair` type
+** TODO add a real reader, so we don't have to use #lang-sexp
+*** Probably related to the above
