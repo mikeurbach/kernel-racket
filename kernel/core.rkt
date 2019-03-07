@@ -64,3 +64,4 @@
 (bind! ground-environment 'show-global-environment (make-applicative show-global-environment))
 (bind! ground-environment 'make-ground-environment (make-applicative make-ground-environment))
 (bind! ground-environment 'check-eq? (make-applicative check-eq?))
+(bind! ground-environment 'check-equal? (make-applicative check-equal?))

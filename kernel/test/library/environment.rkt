@@ -5,5 +5,4 @@
          (b 2))
     (cons a b)))
 
-(check-eq? (car constructed-pair) 1)
-(check-eq? (cdr constructed-pair) 2)
+(check-equal? constructed-pair (cons 1 2))
