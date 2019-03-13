@@ -1,3 +1,7 @@
 *~
 compiled/
 *.html
+*.css
+*.js
+*.rktd
+*.sxref
