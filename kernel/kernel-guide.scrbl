@@ -1,7 +1,8 @@
 #lang scribble/manual
 
 @(require racket/sandbox
-          scribble/example)
+          scribble/example
+          (for-label racket))
 
 @(define kernel-core-evaluator
   (parameterize ([sandbox-output 'string]
@@ -12,7 +13,7 @@
 
 @section{Introduction}
 
-@hyperlink["https://web.wpi.edu/Pubs/ETD/Available/etd-090110-124904/unrestricted/jshutt.pdf"]{Kernel} is a re-design of the Scheme dialect of Lisp, wherein all objects in the language are first-class. There are a handful of built-in procedures and a single special form @racket[$vau], which suffice to define the rest of the language features. For background on Kernel, see the above dissertation and the @hyperlink["ftp://ftp.cs.wpi.edu/pub/techreports/pdf/05-07.pdf"]{language reference}.
+@hyperlink["https://web.wpi.edu/Pubs/ETD/Available/etd-090110-124904/unrestricted/jshutt.pdf"]{Kernel} is a re-design of the Scheme dialect of Lisp, wherein all objects in the language are first-class. There are a handful of built-in procedures and a single special form @code{$vau}, which suffice to define the rest of the language features. For background on Kernel, see the above dissertation and the @hyperlink["ftp://ftp.cs.wpi.edu/pub/techreports/pdf/05-07.pdf"]{language reference}.
 
 The Kernel design goals are summarized and rationalized in the linked documents, but for our purposes, it is worth explaining a little more about why Kernel is the best language to translate into hardware. Throughout the documentation, the property of smoothness is discussed as a key factor in driving design decisions. Think of smoothness as orthoganality combined with the principle of least suprise. A language where all objects are treated the same--procedures, data, special forms, etc.--is smooth.
 
@@ -28,18 +29,19 @@ There is one notable departure from standard Kernel: all pairs in this implement
 
 @itemlist[
   @item{The core implementation can simply use the default Racket S-expression reader, which returns immutable lists. Otherwise, the core implementation would have to read mutable lists, and would be littered with @racket[mcons], @racket[mlist], etc.}
-  @item{It avoids all of the complexities that the reference implementation had to deal with around mutable lists and cycles. This will be more evident when we see the definition of @racket[map].}
+  @item{It avoids all of the complexities that the reference implementation had to deal with around mutable lists and cycles. This will be more evident when we see the definition of @code{map}.}
   @item{Subjectively, a language that is immutable by default will be a more trustworthy companion to its users. A prevelant argument for many of Kernel's design decisions is "dangerous things should be hard to do by default", and the choice of mutable pairs by default seems to violate this.}
 ]
 
-In the style of the language reference, we will introduce the core Kernel types and built-in procedures one-by-one, building up the core language. Each subsection that follows is encapsulated in its own Racket file in the @code{src/core} directory.
+In the style of the language reference, we will introduce the core Kernel types and built-in procedures one-by-one, building up the core language. Each subsection that follows is encapsulated in its own Racket file in the @code{src/core} directory, and the actual Racket definitions are duplicated here.
 
 Procedures defined by the core implementation have names prefixed with @code{kernel-} so as to avoid confusion by shadowing built-in Racket procedures. The core Kernel procedures are ultimately bound in the ground Kernel environment with the same name, less the @code{kernel-} prefix.
 
-Following each definition are some illustrative examples, which are actually evaluated by the @code{kernel/core} evaluator when this documentation is generated.
+Note that in the examples, we are evaluating Kernel expressions even though many of the names are the same as in Racket. That is, the examples exercising @code{boolean?} are using the Kernel procedure @code{boolean?}, which is implemented by the Racket procedure @code{kernel-boolean?}.
 
-@subsection{Boolean}
+@subsection{Booleans}
 
+@defproc[(kernel-boolean? [object any/c]) boolean?]{
 Booleans are represented by the Racket objects @racket[#t] and @racket[#f].
 
 @racketblock[(define kernel-boolean? boolean?)]
@@ -48,9 +50,11 @@ Booleans are represented by the Racket objects @racket[#t] and @racket[#f].
           (boolean? #f)
           (boolean? #t)
           (boolean? 1)]
+}
 
 @subsection{Equivalence under mutation}
 
+@defproc[(kernel-eq? [object1 any/c] [object2 any/c]) boolean?]{
 Equivalence under mutation simply delegates to Racket's @racket[eq?] procedure.
 
 @racketblock[(define kernel-eq? eq?)]
@@ -60,9 +64,11 @@ While the core implementation does not provide any mechanism to mutate @racket[c
 @examples[#:eval kernel-core-evaluator
           (eq? 1 1)
           (eq? (cons 1 2) (cons 1 2))]
+}
 
 @subsection{Equivalence up to mutation}
 
+@defproc[(kernel-equal? [object1 any/c] [object2 any/c]) boolean?]{
 Similarly, equivalence up to mutation simply delegates to Racket's @racket[equal?] procedure.
 
 @racketblock[(define kernel-equal? equal?)]
@@ -72,3 +78,4 @@ As expected, @racket[cons] cells are considered equal up to mutation.
 @examples[#:eval kernel-core-evaluator
           (equal? 1 1)
           (equal? (cons 1 2) (cons 1 2))]
+}
