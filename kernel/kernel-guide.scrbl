@@ -79,3 +79,38 @@ As expected, @racket[cons] cells are considered equal up to mutation.
           (equal? 1 1)
           (equal? (cons 1 2) (cons 1 2))]
 }
+
+@subsection{Symbols}
+
+@defproc[(kernel-symbol? [object any/c]) boolean?]{
+Symbols are represented by Racket symbols. This provides the required behavior, however, the representation of certain special symbols is slightly interesting.
+
+In the Kernel specification, the symbols @racket[|#ignore|] and @racket[|#inert|] have special meaning. Rather than representing symbols, they denote distinct types of objects, which are represented in the form of the above symbols. In later sections, both types are defined.
+
+To understand how symbols work, we need to decide how to treat the above special symbols. For now, they are treated differently, and neither is treated particularly well.
+
+An object of Inert type is represented by a Racket @racket[struct], and such objects are constructed when necessary by calling the struct's constructor, @racket[ignore], when needed. This is reasonable, as the intent of this type is to allow the user to signal nothingness, and @racket[ignore] appears in tail contexts.
+
+Unlike Inert, an object of Ignore type is not represented by a Racket struct, but the Racket symbol @racket['|#ignore|]. This is because it is used in positions where parameter trees are accepted, and the evaluator implementation would have to have special cases to deal with them. Instead, by deciding that the Racket symbol @racket['|#ignore|] is no longer a Kernel symbol, but represents an object of Ignore type, we allow such objects to be self-evaluating. Since only the @racket['ignore?] type predicate returns @racket[#t] for the symbol @racket['|#ignore|], we have effectively added @racket[|#ignore|] as a new type by not considering it a symbol.
+
+Neither approach is ideal. Once abstract data types have been properly added, both @racket[|#inert|] and @racket[|#ignore|] will be added as abstract data types.
+
+@racketblock[
+(define (kernel-symbol? object)
+  (and (not (eqv? object '|#ignore|))
+       (symbol? object)))
+]
+
+@examples[#:eval kernel-core-evaluator
+          ($define! quote ($vau (x) |#ignore| x))
+          (quote foo)
+          (symbol? (quote foo))
+          (symbol? 1)
+          (symbol? #t)
+          (symbol? |#ignore|)
+          (symbol? (inert))]
+
+Note that @racket[symbol?] is an applicative in Kernel, which means its arguments are evaluated. And, as we will see, symbols do not evaluate to themselves, but are instead looked up in the environment. This poses a problem for our example, since we'd like to test the behavior of @racket[symbol?] without evaulating its argument. In fact, this is exactly how the evaluator uses @racket[symbol?] in the main case analysis.
+
+For the purpose of exposition, we used the @code{$vau} operative to define our own version of Racket's @racket[quote], and used that to pass a symbol to @racket[symbol?] without evaluating it. Don't worry too much about @code{$vau} for now. Just know that it allowed us to define the usual @racket[quote] procedure we need for this example.
+}
