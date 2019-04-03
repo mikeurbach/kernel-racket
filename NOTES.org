@@ -42,8 +42,8 @@ This $type form performs the following:
 *** Labels
 'foo
 *** Assignment
-(assign <register-name> (reg <register-name>))
-(assign <register-name> (const <constant-value>))
-(assign <register-name> (op <operation-name> <input1> ... <inputn>))
+* DONE (assign <register-name> (reg <register-name>))
+* DONE (assign <register-name> (const <constant-value>))
+* TODO (assign <register-name> (op <operation-name> <input1> ... <inputn>))
 *** Conditionals
-(cond ((op <operation-name> <input1> ... <inputn>) <label>) ... (#t <label>))
+* TODO (cond ((op <operation-name> <input1> ... <inputn>) <label>) ... (#t <label>))
