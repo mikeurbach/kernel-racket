@@ -37,3 +37,13 @@ This $type form performs the following:
 2. Creates a predicate named `pair?` which expects one argument and returns true iff the argument is an object of the `pair` type
 ** TODO add a real reader, so we don't have to use #lang-sexp
 *** Probably related to the above
+* RTL
+** Operations
+*** Labels
+'foo
+*** Assignment
+(assign <register-name> (reg <register-name>))
+(assign <register-name> (const <constant-value>))
+(assign <register-name> (op <operation-name> <input1> ... <inputn>))
+*** Conditionals
+(cond ((op <operation-name> <input1> ... <inputn>) <label>) ... (#t <label>))
