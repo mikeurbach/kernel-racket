@@ -27,9 +27,9 @@ This $type form performs the following:
 *** Idea 2:
 Classical, recursive ADT, a-la Haskell
 
-($type (pair any)
-  ()
-  (cons any (pair any)))
+($type (pair a)
+  (nil)
+  (cons a (pair a)))
 
 This $type form performs the following:
 
@@ -42,8 +42,8 @@ This $type form performs the following:
 *** Labels
 'foo
 *** Assignment
-* DONE (assign <register-name> (reg <register-name>))
-* DONE (assign <register-name> (const <constant-value>))
-* TODO (assign <register-name> (op <operation-name> <input1> ... <inputn>))
+**** DONE (assign <register-name> (reg <register-name>))
+**** DONE (assign <register-name> (const <constant-value>))
+**** DONE (assign <register-name> (op <operation-name> <input1> ... <inputn>))
 *** Conditionals
-* TODO (cond ((op <operation-name> <input1> ... <inputn>) <label>) ... (#t <label>))
+**** TODO (cond ((op <operation-name> <input1> ... <inputn>) <label>) ... (#t <label>))
