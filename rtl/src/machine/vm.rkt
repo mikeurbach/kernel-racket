@@ -6,24 +6,17 @@
   (class object%
     (init-field instructions)
 
-    (define (extract-registers insts)
+    (define (traverse-instructions processor insts)
       (if (empty? insts)
           (hash)
-          (let ([inst-registers (extract-inst-registers (car insts))])
-            (hash-union inst-registers (extract-registers (cdr insts))
-                        #:combine/key (lambda (k v1 v2) v2)))))
+          (let ([processed (processor (car insts))]
+                [tail (traverse-instructions processor (cdr insts))])
+            (hash-union processed tail #:combine/key (lambda (k v1 v2) v2)))))
 
     (define (extract-inst-registers instruction)
       (match instruction
         [(list 'assign name _ ...) (hash name (register #f))]
         [_ (hash)]))
-
-    (define (extract-operators insts)
-      (if (empty? insts)
-          (hash)
-          (let ([inst-operators (extract-inst-operators (car insts))])
-            (hash-union inst-operators (extract-operators (cdr insts))
-                        #:combine/key (lambda (k v1 v2) v2)))))
 
     (define (extract-inst-operators instruction)
       (match instruction
@@ -36,12 +29,21 @@
 
     (define (extract-execution-proc instruction)
       (match instruction
+        [label #:when (symbol? label) label]
         [(list 'assign name (list 'const value))
          (make-assign-const name value)]
         [(list 'assign name (list 'reg arg-name))
          (make-assign-reg name arg-name)]
         [(list 'assign name (list 'op operator) inputs ...)
          (make-assign-op name operator inputs)]))
+
+    (define (extract-basic-blocks insts)
+      (if (empty? insts)
+          (hash)
+          (if (symbol? (car insts))
+              (let ([pair (hash (car insts) (cdr insts))])
+                (hash-union pair (extract-basic-blocks (cdr insts))))
+              (extract-basic-blocks (cdr insts)))))
 
     (define (make-assign-const name value)
       (lambda ()
@@ -82,9 +84,18 @@
       (let ([new-pc (cdr (register-value pc))])
         (set-register-value! pc new-pc)))
 
-    (define registers (extract-registers instructions))
-    (define operators (extract-operators instructions))
-    (define program (extract-execution-procs instructions))
+    (define registers
+      (traverse-instructions extract-inst-registers instructions))
+
+    (define operators
+      (traverse-instructions extract-inst-operators instructions))
+
+    (define execution-procs (extract-execution-procs instructions))
+
+    (define basic-blocks (extract-basic-blocks execution-procs))
+
+    (define program (filter (lambda (p) (not (symbol? p))) execution-procs))
+
     (define pc (register program))
 
     (define/public (execute)
@@ -100,5 +111,11 @@
 
     (define/public (get-operators)
       operators)
+
+    (define/public (get-program)
+      program)
+
+    (define/public (get-basic-blocks)
+      basic-blocks)
 
     (super-new)))
