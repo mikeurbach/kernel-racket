@@ -27,7 +27,8 @@
 
     (define (extract-inst-operators instruction)
       (match instruction
-        [(list 'assign _ (list 'op operator) _ ...) (hash operator (eval operator))]
+        [(list 'assign _ (list 'op operator) _ ...)
+         (hash operator (eval operator))]
         [_ (hash)]))
 
     (define (extract-execution-procs insts)
@@ -35,9 +36,12 @@
 
     (define (extract-execution-proc instruction)
       (match instruction
-        [(list 'assign name (list 'const value)) (make-assign-const name value)]
-        [(list 'assign name (list 'reg arg-name)) (make-assign-reg name arg-name)]
-        [(list 'assign name (list 'op operator) inputs ...) (make-assign-op name operator inputs)]))
+        [(list 'assign name (list 'const value))
+         (make-assign-const name value)]
+        [(list 'assign name (list 'reg arg-name))
+         (make-assign-reg name arg-name)]
+        [(list 'assign name (list 'op operator) inputs ...)
+         (make-assign-op name operator inputs)]))
 
     (define (make-assign-const name value)
       (lambda ()
