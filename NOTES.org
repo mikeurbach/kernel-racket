@@ -45,5 +45,8 @@ This $type form performs the following:
 **** DONE (assign <register-name> (reg <register-name>))
 **** DONE (assign <register-name> (const <constant-value>))
 **** DONE (assign <register-name> (op <operation-name> <input1> ... <inputn>))
+**** TODO tests!
+**** TODO multiple assignment in one instruction
 *** Conditionals
-**** TODO (branch ((op <operation-name> <input1> ... <inputn>) <label>) ... (#t <label>))
+**** DONE (branch ((op <operation-name> <input1> ... <inputn>) <label>) ... (#t <label>))
+**** TODO tests!
