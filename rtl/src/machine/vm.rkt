@@ -22,9 +22,21 @@
       (match instruction
         [(list 'assign _ (list 'op operator) _ ...)
          (hash operator (eval operator))]
-        [(list 'branch (list (list (list 'op operator) _ ...) _ ...) _ ...)
-         (hash operator (eval operator))]
+        [(list 'branch clauses ...)
+         (extract-branch-operators clauses)]
         [_ (hash)]))
+
+    (define (extract-branch-operators clauses)
+      (if (empty? clauses)
+          (hash)
+          (hash-union (extract-branch-operator (car clauses))
+                      (extract-branch-operators (cdr clauses)))))
+
+    (define (extract-branch-operator clause)
+      (match clause
+        [(list (list (list 'op operator) _ ...) _)
+         (hash operator (eval operator))]
+        [#t (hash)]))
 
     (define (extract-execution-procs insts)
       (map extract-execution-proc insts))
@@ -79,7 +91,8 @@
     (define (make-branch-predicates predicates)
       (if (empty? predicates)
           '()
-          (cons (make-branch-predicate (car predicates)) (cdr predicates))))
+          (cons (make-branch-predicate (car predicates))
+                (make-branch-predicates (cdr predicates)))))
 
     (define (make-branch-predicate predicate)
       (match predicate
