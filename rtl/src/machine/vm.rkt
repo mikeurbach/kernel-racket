@@ -15,15 +15,25 @@
 
     (define (extract-inst-registers instruction)
       (match instruction
-        [(list 'assign name _ ...) (hash name (register #f))]
+        [(list 'assign (list names _ ...) ...)
+         (traverse-instructions extract-assign-register names)]
         [_ (hash)]))
+
+    (define (extract-assign-register name)
+      (hash name (register #f)))
 
     (define (extract-inst-operators instruction)
       (match instruction
-        [(list 'assign _ (list 'op operator) _ ...)
-         (hash operator (eval operator))]
+        [(list 'assign assignments ...)
+         (traverse-instructions extract-assign-operator assignments)]
         [(list 'branch clauses ...)
          (extract-branch-operators clauses)]
+        [_ (hash)]))
+
+    (define (extract-assign-operator assignment)
+      (match assignment
+        [(list _ (list 'op operator) _ ...)
+         (hash operator (eval operator))]
         [_ (hash)]))
 
     (define (extract-branch-operators clauses)
@@ -44,12 +54,8 @@
     (define (extract-execution-proc instruction)
       (match instruction
         [label #:when (symbol? label) label]
-        [(list 'assign name (list 'const value))
-         (make-assign-const name value)]
-        [(list 'assign name (list 'reg arg-name))
-         (make-assign-reg name arg-name)]
-        [(list 'assign name (list 'op operator) inputs ...)
-         (make-assign-op name operator inputs)]
+        [(list 'assign assignments ...)
+         (make-assign assignments)]
         [(list 'branch (list predicates labels) ...)
          (make-branch predicates labels)]))
 
@@ -61,18 +67,32 @@
                 (hash-union pair (extract-basic-blocks (cdr insts))))
               (extract-basic-blocks (cdr insts)))))
 
+    (define (make-assign assignments)
+      (let ([assign-procs (map make-assign-proc assignments)])
+        (lambda ()
+          (for ([proc assign-procs])
+            (proc))
+          (advance-pc!))))
+
+    (define (make-assign-proc instruction)
+      (match instruction
+        [(list name (list 'const value))
+         (make-assign-const name value)]
+        [(list name (list 'reg arg-name))
+         (make-assign-reg name arg-name)]
+        [(list name (list 'op operator) inputs ...)
+         (make-assign-op name operator inputs)]))
+
     (define (make-assign-const name value)
       (lambda ()
         (let ([register (hash-ref registers name)])
-          (set-register-value! register value)
-          (advance-pc!))))
+          (set-register-value! register value))))
 
     (define (make-assign-reg name arg-name)
       (lambda ()
         (let ([register (hash-ref registers name)]
               [arg-exp (make-register-exp arg-name)])
-          (set-register-value! register (arg-exp))
-          (advance-pc!))))
+          (set-register-value! register (arg-exp)))))
 
     (define (make-assign-op name operator inputs)
       (let ([operator-proc (hash-ref operators operator)]
@@ -80,8 +100,7 @@
             [arg-exps (map make-primitive-exp inputs)])
         (lambda ()
           (let ([args (map (lambda (e) (e)) arg-exps)])
-            (set-register-value! register (apply operator-proc args))
-            (advance-pc!)))))
+            (set-register-value! register (apply operator-proc args))))))
 
     (define (make-branch predicates labels)
       (let ([predicate-procs (make-branch-predicates predicates)])
