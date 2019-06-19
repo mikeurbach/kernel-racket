@@ -46,7 +46,7 @@
       (match clause
         [(list (list (list 'op operator) _ ...) _)
          (hash operator (eval operator))]
-        [#t (hash)]))
+        [_ (hash)]))
 
     (define (extract-execution-procs insts)
       (map extract-execution-proc insts))
