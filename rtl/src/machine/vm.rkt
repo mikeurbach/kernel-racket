@@ -1,10 +1,14 @@
 #lang racket
 
 (require "register.rkt" racket/hash)
+(provide vm)
 
 (define vm
   (class object%
     (init-field instructions)
+
+    ;; for now all racket procedures can be used as operators
+    (define namespace (module->namespace 'racket))
 
     (define (traverse-instructions processor insts)
       (if (empty? insts)
@@ -33,7 +37,7 @@
     (define (extract-assign-operator assignment)
       (match assignment
         [(list _ (list 'op operator) _ ...)
-         (hash operator (eval operator))]
+         (hash operator (eval operator namespace))]
         [_ (hash)]))
 
     (define (extract-branch-operators clauses)
@@ -45,7 +49,7 @@
     (define (extract-branch-operator clause)
       (match clause
         [(list (list (list 'op operator) _ ...) _)
-         (hash operator (eval operator))]
+         (hash operator (eval operator namespace))]
         [_ (hash)]))
 
     (define (extract-execution-procs insts)
@@ -184,16 +188,7 @@
               ((car insts))
               (execute)))))
 
-    (define/public (get-registers)
-      registers)
-
-    (define/public (get-operators)
-      operators)
-
-    (define/public (get-program)
-      program)
-
-    (define/public (get-basic-blocks)
-      basic-blocks)
+    (define/public (get-register name)
+      (hash-ref registers name))
 
     (super-new)))
