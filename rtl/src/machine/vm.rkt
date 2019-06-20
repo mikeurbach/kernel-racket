@@ -68,36 +68,44 @@
               (extract-basic-blocks (cdr insts)))))
 
     (define (make-assign assignments)
-      (let ([assign-procs (map make-assign-proc assignments)])
-        (lambda ()
+      (lambda ()
+        (letrec ([registers-before (copy-registers)]
+                 [assign-procs (map (make-assign-proc registers-before) assignments)])
           (for ([proc assign-procs])
             (proc))
           (advance-pc!))))
 
-    (define (make-assign-proc instruction)
-      (match instruction
-        [(list name (list 'const value))
-         (make-assign-const name value)]
-        [(list name (list 'reg arg-name))
-         (make-assign-reg name arg-name)]
-        [(list name (list 'op operator) inputs ...)
-         (make-assign-op name operator inputs)]))
+    (define (copy-registers)
+      (apply hash (flatten (hash-map registers copy-register))))
+
+    (define (copy-register name reg)
+      (list name (register (register-value reg))))
+
+    (define (make-assign-proc registers-before)
+      (lambda (instruction)
+        (match instruction
+          [(list name (list 'const value))
+           (make-assign-const name value)]
+          [(list name (list 'reg arg-name))
+           (make-assign-reg name arg-name registers-before)]
+          [(list name (list 'op operator) inputs ...)
+           (make-assign-op name operator inputs registers-before)])))
 
     (define (make-assign-const name value)
       (lambda ()
         (let ([register (hash-ref registers name)])
           (set-register-value! register value))))
 
-    (define (make-assign-reg name arg-name)
+    (define (make-assign-reg name arg-name registers-before)
       (lambda ()
         (let ([register (hash-ref registers name)]
-              [arg-exp (make-register-exp arg-name)])
+              [arg-exp (make-register-exp arg-name registers-before)])
           (set-register-value! register (arg-exp)))))
 
-    (define (make-assign-op name operator inputs)
+    (define (make-assign-op name operator inputs registers-before)
       (let ([operator-proc (hash-ref operators operator)]
             [register (hash-ref registers name)]
-            [arg-exps (map make-primitive-exp inputs)])
+            [arg-exps (map (make-primitive-exp registers-before) inputs)])
         (lambda ()
           (let ([args (map (lambda (e) (e)) arg-exps)])
             (set-register-value! register (apply operator-proc args))))))
@@ -117,7 +125,7 @@
       (match predicate
         [(list (list 'op operator) inputs ...)
          (let ([operator-proc (hash-ref operators operator)]
-               [arg-exps (map make-primitive-exp inputs)])
+               [arg-exps (map (make-primitive-exp registers) inputs)])
            (lambda ()
              (let ([args (map (lambda (e) (e)) arg-exps)])
                (apply operator-proc args))))]
@@ -132,17 +140,18 @@
                 (set-pc! label)
                 (test-branch-predicates (cdr predicate-procs) (cdr labels))))))
 
-    (define (make-primitive-exp expression)
-      (match expression
-        [(list 'const value) (make-const-exp value)]
-        [(list 'reg name) (make-register-exp name)]))
+    (define (make-primitive-exp registers-before)
+      (lambda (expression)
+        (match expression
+          [(list 'const value) (make-const-exp value)]
+          [(list 'reg name) (make-register-exp name registers-before)])))
 
     (define (make-const-exp value)
       (lambda () value))
 
-    (define (make-register-exp name)
+    (define (make-register-exp name registers-before)
       (lambda ()
-        (let ([register (hash-ref registers name)])
+        (let ([register (hash-ref registers-before name)])
           (register-value register))))
 
     (define (advance-pc!)
