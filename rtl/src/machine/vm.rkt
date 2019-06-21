@@ -31,7 +31,7 @@
         [(list 'assign assignments ...)
          (traverse-instructions extract-assign-operator assignments)]
         [(list 'branch clauses ...)
-         (extract-branch-operators clauses)]
+         (traverse-instructions extract-branch-operator clauses)]
         [_ (hash)]))
 
     (define (extract-assign-operator assignment)
@@ -39,12 +39,6 @@
         [(list _ (list 'op operator) _ ...)
          (hash operator (eval operator namespace))]
         [_ (hash)]))
-
-    (define (extract-branch-operators clauses)
-      (if (empty? clauses)
-          (hash)
-          (hash-union (extract-branch-operator (car clauses))
-                      (extract-branch-operators (cdr clauses)))))
 
     (define (extract-branch-operator clause)
       (match clause
