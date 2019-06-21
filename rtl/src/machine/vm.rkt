@@ -182,7 +182,10 @@
               ((car insts))
               (execute)))))
 
-    (define/public (get-register name)
-      (hash-ref registers name))
+    (define/public (vm-get-register-value name)
+      (register-value (hash-ref registers name)))
+
+    (define/public (vm-set-register-value! name value)
+      (set-register-value! (hash-ref registers name) value))
 
     (super-new)))
