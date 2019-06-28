@@ -6,9 +6,7 @@
 (define vm
   (class object%
     (init-field instructions)
-
-    ;; for now all racket procedures can be used as operators
-    (define namespace (module->namespace 'racket))
+    (init-field namespace)
 
     (define (traverse-instructions processor insts)
       (if (empty? insts)

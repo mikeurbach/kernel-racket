@@ -2,8 +2,10 @@
 
 (require "../../src/machine/vm.rkt" rackunit)
 
+(define namespace (module->namespace 'racket))
+
 (define (run-vm insts)
-  (define myvm (new vm [instructions insts]))
+  (define myvm (new vm [namespace namespace] [instructions insts]))
   (send myvm execute)
   myvm)
 
@@ -60,7 +62,7 @@
   (assert-register myvm 'b 420))
 
 ;; GCD
-(let ([myvm (new vm [instructions '(test-b
+(let ([myvm (new vm [namespace namespace] [instructions '(test-b
                                     (branch (((op eq?) (reg b) (const 0)) done))
                                     (assign (a (reg b))
                                             (b (op remainder) (reg a) (reg b)))
@@ -73,7 +75,7 @@
   (assert-register myvm 'result 3))
 
 ;; Fibonacci
-(let ([myvm (new vm [instructions '((assign (prev (const 0))
+(let ([myvm (new vm [namespace namespace] [instructions '((assign (prev (const 0))
                                             (curr (const 1)))
                                     test-n
                                     (branch (((op eq?) (reg n) (const 0)) done))
@@ -88,7 +90,7 @@
   (assert-register myvm 'result 354224848179261915075))
 
 ;; Factorial
-(let ([myvm (new vm [instructions '((assign (product (const 1)))
+(let ([myvm (new vm [namespace namespace] [instructions '((assign (product (const 1)))
                                     test-n
                                     (branch (((op eq?) (reg n) (const 0)) done))
                                     (assign (product (op *) (reg n) (reg product))
