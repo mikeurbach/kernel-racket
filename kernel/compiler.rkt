@@ -50,7 +50,7 @@
           (lambda (operand) (compile operand 'val 'next))
           (reverse (operands expr)))])
     (if (empty? operand-codes)
-        '(assign (argl (const ())))
+        '((assign (argl (const ()))))
         (let ([last-operand-code
                (list
                 (caar operand-codes)
