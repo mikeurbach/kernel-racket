@@ -68,9 +68,12 @@
       (if (empty? insts)
           (hash)
           (if (symbol? (car insts))
-              (let ([pair (hash (car insts) (cdr insts))])
+              (let ([pair (hash (car insts) (filter-execution-procs (cdr insts)))])
                 (hash-union pair (extract-basic-blocks (cdr insts))))
               (extract-basic-blocks (cdr insts)))))
+
+    (define (filter-execution-procs insts)
+      (filter (compose1 not symbol?) insts))
 
     (define (make-assign assignments)
       (lambda ()
@@ -177,7 +180,7 @@
 
     (define basic-blocks (extract-basic-blocks execution-procs))
 
-    (define program (filter (compose1 not symbol?) execution-procs))
+    (define program (filter-execution-procs execution-procs))
 
     (define pc (register program))
 
@@ -194,5 +197,20 @@
 
     (define/public (vm-set-register-value! name value)
       (set-register-value! (hash-ref registers name) value))
+
+    (define/public (get-execution-procs)
+      execution-procs)
+
+    (define/public (get-basic-blocks)
+      basic-blocks)
+
+    (define/public (get-instructions)
+      instructions)
+
+    (define/public (show-registers)
+      (hash-for-each
+       registers
+       (lambda (key value)
+         (displayln (format "~v: ~v" key (register-value value))))))
 
     (super-new)))
