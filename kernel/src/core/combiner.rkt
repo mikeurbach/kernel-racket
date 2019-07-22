@@ -1,6 +1,6 @@
 #lang racket
 
-(provide make-operative operative? operate
+(provide make-operative operative? operative-proc operate
          make-applicative applicative? kernel-wrap kernel-unwrap)
 
 (struct operative (proc))

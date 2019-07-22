@@ -1,12 +1,16 @@
 #lang racket
 
-(require "register.rkt" racket/hash)
+(require
+ "../../../kernel/src/core/combiner.rkt"
+ "../../../kernel/src/core/environment.rkt"
+ "register.rkt"
+ racket/hash)
 (provide vm)
 
 (define vm
   (class object%
     (init-field instructions)
-    (init-field namespace)
+    (init-field environment)
 
     (define (traverse-instructions processor insts)
       (if (empty? insts)
@@ -35,14 +39,19 @@
     (define (extract-assign-operator assignment)
       (match assignment
         [(list _ (list 'op operator) _ ...)
-         (hash operator (eval operator namespace))]
+         (hash operator (combiner-proc (lookup operator environment)))]
         [_ (hash)]))
 
     (define (extract-branch-operator clause)
       (match clause
         [(list (list (list 'op operator) _ ...) _)
-         (hash operator (eval operator namespace))]
+         (hash operator (combiner-proc (lookup operator environment)))]
         [_ (hash)]))
+
+    (define (combiner-proc combiner)
+      (operative-proc (if (applicative? combiner)
+                          (kernel-unwrap combiner)
+                          combiner)))
 
     (define (extract-execution-procs insts)
       (map extract-execution-proc insts))
@@ -104,7 +113,7 @@
             [arg-exps (map (make-primitive-exp registers-before) inputs)])
         (lambda ()
           (let ([args (map (lambda (e) (e)) arg-exps)])
-            (set-register-value! register (apply operator-proc args))))))
+            (set-register-value! register (apply operator-proc (list args environment)))))))
 
     (define (make-branch predicates labels)
       (let ([predicate-procs (make-branch-predicates predicates)])
@@ -124,7 +133,7 @@
                [arg-exps (map (make-primitive-exp registers) inputs)])
            (lambda ()
              (let ([args (map (lambda (e) (e)) arg-exps)])
-               (apply operator-proc args))))]
+               (apply operator-proc (list args environment)))))]
         [#t (lambda () #t)]))
 
     (define (test-branch-predicates predicate-procs labels)
