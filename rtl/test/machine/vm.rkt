@@ -1,13 +1,13 @@
 #lang racket
 
 (require
- (only-in "../../../kernel/core.rkt" ground-environment)
+ (only-in kernel global-env)
  "../../../kernel/src/core/combiner.rkt"
  "../../../kernel/src/core/environment.rkt"
  "../../src/machine/vm.rkt"
  rackunit)
 
-(define test-environment (make-environment (list ground-environment)))
+(define test-environment (make-environment (list global-env)))
 (bind! test-environment '+ (make-applicative +))
 (bind! test-environment '- (make-applicative -))
 (bind! test-environment '* (make-applicative *))

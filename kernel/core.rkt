@@ -15,7 +15,7 @@
  )
 
 (provide
- ground-environment
+ global-env
  (rename-out [module-begin #%module-begin]
              [top-interaction #%top-interaction]))
 
