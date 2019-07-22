@@ -1,9 +1,26 @@
 #lang racket
 
 (require
+ (only-in kernel global-env)
+ "src/core/combiner.rkt"
+ "src/core/environment.rkt"
  "src/core/pair.rkt"
  "src/core/symbol.rkt"
- "src/core/environment.rkt")
+ "./../rtl/src/machine/vm.rkt")
+
+(define compiler-environment (make-environment (list global-env)))
+(bind! compiler-environment 'lookup (make-applicative lookup))
+(bind! compiler-environment 'operate (make-applicative operate))
+
+(define prelude
+  `((assign (env (const ,compiler-environment)))))
+
+(define (compile-machine expr)
+  (let ([instructions
+         (append
+          prelude
+          (compile expr 'val 'next))])
+    (new vm [instructions instructions] [environment compiler-environment])))
 
 (define (compile expr target linkage)
   (cond [(kernel-symbol? expr) (compile-symbol-lookup expr target linkage)]
@@ -23,10 +40,10 @@
     (compile-combiner-branch)
     (compile-unevaluated-operands expr)
     (compile-operate-branch)
-    applicative-label
+    (list applicative-label)
     (compile-applicative-unwrap)
     (compile-evaluated-operands expr)
-    operate-label
+    (list operate-label)
     (compile-operate))))
 
 (define (compile-operator expr)
@@ -42,7 +59,7 @@
   `((assign (argl (const ,(operands expr))))))
 
 (define (compile-applicative-unwrap)
-  '((assign (proc (op kernel-unwrap) (reg proc)))))
+  '((assign (proc (op unwrap) (reg proc)))))
 
 (define (compile-evaluated-operands expr)
   (let ([operand-codes
@@ -93,5 +110,5 @@
 
 (define (operator expr) (car expr))
 (define (operands expr) (cdr expr))
-(define applicative-label '(applicative))
-(define operate-label '(operate))
+(define applicative-label 'applicative)
+(define operate-label 'operate)
