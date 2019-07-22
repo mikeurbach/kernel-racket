@@ -10,4 +10,4 @@
 ;; now we can simply provide the same #%module-begin and #%top-interaction from core,
 ;; and the compound combiners defined in the library are layered on top.
 
-(provide #%module-begin #%top-interaction)
+(provide #%module-begin #%top-interaction global-env)
