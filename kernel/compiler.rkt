@@ -33,7 +33,40 @@
    `((assign (,target (op lookup) (const ,expr) (reg env))))))
 
 (define (compile-combination expr target linkage)
-  (letrec ([operator-name (if (symbol? (operator expr)) (symbol->string (operator expr)) "<operator>")]
+  (let ([operator (combination-operator expr)]
+        [operands (combination-operands expr)])
+    (cond [(symbol? operator)
+           (cond [(eq? operator '$if) (compile-if expr target linkage)]
+                 [(eq? operator '$define!) (compile-define expr target linkage)]
+                 [(eq? operator '$vau) (compile-vau expr target linkage)]
+                 [(eq? operator 'wrap) (compile-wrap expr target linkage)]
+                 [(eq? operator 'unwrap) (compile-unwrap expr target linkage)]
+                 [(eq? operator 'eval) (compile-eval expr target linkage)]
+                 [else (compile-general-combination expr target linkage)])]
+          [else
+           (compile expr (proc-name "<anonymous>") 'next)]))) ;; TODO: check how SICP does this
+
+(define (compile-if expr target linkage)
+  'compiling-if)
+
+(define (compile-define expr target linkage)
+  'compiling-define)
+
+(define (compile-vau expr target linkage)
+  'compiling-vau)
+
+(define (compile-wrap expr target linkage)
+  'compiling-wrap)
+
+(define (compile-unwrap expr target linkage)
+  'compiling-unwrap)
+
+(define (compile-eval expr target linkage)
+  'compiling-eval)
+
+;; TODO: do we really have to check type at runtime? why not interpret the operator at compile time?
+(define (compile-general-combination expr target linkage)
+  (letrec ([operator-name (if (symbol? (combination-operator expr)) (symbol->string (combination-operator expr)) "<operator>")]
            [label-for-applicative (applicative-prep-label operator-name)]
            [label-for-operate (operate-label operator-name)]
            [proc (proc-name operator-name)]
@@ -53,13 +86,13 @@
       (compile-operate proc argl target)))))
 
 (define (compile-operator proc expr)
-  (compile (operator expr) proc 'next))
+  (compile (combination-operator expr) proc 'next))
 
 (define (compile-combiner-branch proc label)
   `((branch (((op applicative?) (reg ,proc)) ,label))))
 
 (define (compile-unevaluated-operands argl expr)
-  `((assign (,argl (const ,(operands expr))))))
+  `((assign (,argl (const ,(combination-operands expr))))))
 
 (define (compile-operate-branch label)
   `((branch (#t ,label))))
@@ -68,7 +101,7 @@
   `((assign (,proc (op unwrap) (reg ,proc)))))
 
 (define (compile-evaluated-operands argl val expr)
-  (let ([operand-codes (map (compile-operand val) (reverse (operands expr)))])
+  (let ([operand-codes (map (compile-operand val) (reverse (combination-operands expr)))])
     (if (empty? operand-codes)
         '((assign (argl (const ()))))
         (let ([last-operand-code
@@ -127,8 +160,8 @@
 (define argl-name (unique-label "-argl-"))
 (define val-name (unique-label "-val-"))
 
-(define (operator expr) (car expr))
-(define (operands expr) (cdr expr))
+(define (combination-operator expr) (car expr))
+(define (combination-operands expr) (cdr expr))
 
 (define-syntax-rule (debug symbol)
   (displayln (format (string-append (symbol->string 'symbol) ": ~v") symbol)))
