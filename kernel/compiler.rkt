@@ -44,7 +44,7 @@
                  [(eq? operator 'eval) (compile-eval expr target linkage)]
                  [else (compile-general-combination expr target linkage)])]
           [else
-           (compile expr (proc-name "<anonymous>") 'next)]))) ;; TODO: check how SICP does this
+           (compile expr (proc-name "<anonymous>") 'next)])))
 
 (define (compile-if expr target linkage)
   'compiling-if)
@@ -64,7 +64,6 @@
 (define (compile-eval expr target linkage)
   'compiling-eval)
 
-;; TODO: do we really have to check type at runtime? why not interpret the operator at compile time?
 (define (compile-general-combination expr target linkage)
   (letrec ([operator-name (if (symbol? (combination-operator expr)) (symbol->string (combination-operator expr)) "<operator>")]
            [label-for-applicative (applicative-prep-label operator-name)]
