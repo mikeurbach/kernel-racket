@@ -10,6 +10,7 @@
 
 (define compiler-environment (make-environment (list global-env)))
 (bind! compiler-environment 'lookup (make-applicative lookup))
+(bind! compiler-environment 'match! (make-applicative match!))
 (bind! compiler-environment 'operate (make-applicative operate))
 
 (define prelude
@@ -73,7 +74,14 @@
      `((branch (((op eq?) (reg ,val) (const #f)) ,label))))))
 
 (define (compile-define expr target linkage)
-  'compiling-define)
+  (letrec ([ptree (define-ptree expr)]
+           [val-expr (define-expr expr)]
+           [val (val-name "define")]
+           [compiled-expr (compile val-expr val 'next)])
+    (append
+     compiled-expr
+     `((assign (,target (op match!) (const ,ptree) (reg ,val) (reg env)))
+       (assign (,target (op inert)))))))
 
 (define (compile-vau expr target linkage)
   'compiling-vau)
@@ -179,9 +187,12 @@
 (define argl-name (unique-label "-argl-"))
 (define val-name (unique-label "-val-"))
 
+;; these should be shared with interpreter
 (define (if-predicate expr) (cadr expr))
 (define (if-consequent expr) (caddr expr))
 (define (if-alternative expr) (cadddr expr))
+(define (define-ptree expr) (cadr expr))
+(define (define-expr expr) (caddr expr))
 (define (combination-operator expr) (car expr))
 (define (combination-operands expr) (cdr expr))
 
