@@ -78,7 +78,7 @@
            [compiled-predicate (compile predicate val 'next)])
     (append
      compiled-predicate
-     `((branch (((op eq?) (reg ,val) (const #f)) ,label))))))
+     `((branch (((op eq?) (reg ,val) (const #f)) (const ,label)))))))
 
 (define (compile-define expr target linkage)
   (letrec ([ptree (define-ptree expr)]
@@ -153,13 +153,13 @@
   (compile (combination-operator expr) proc 'next))
 
 (define (compile-combiner-branch proc label)
-  `((branch (((op applicative?) (reg ,proc)) ,label))))
+  `((branch (((op applicative?) (reg ,proc)) (const ,label)))))
 
 (define (compile-unevaluated-operands argl expr)
   `((assign (,argl (const ,(combination-operands expr))))))
 
 (define (compile-operate-branch label)
-  `((branch (#t ,label))))
+  `((branch (#t (const ,label)))))
 
 (define (compile-applicative-unwrap proc)
   `((assign (,proc (op unwrap) (reg ,proc)))))
@@ -199,8 +199,10 @@
 (define (compile-linkage linkage)
   (cond [(eq? linkage 'next)
          '()]
+        [(string-contains? (symbol->string linkage) "continue")
+         `((branch (#t (reg, linkage))))]
         [else
-         `((branch (#t (reg ,linkage))))]))
+         `((branch (#t (const ,linkage))))]))
 
 (define (end-with-linkage linkage instructions)
   (append instructions (compile-linkage linkage)))
