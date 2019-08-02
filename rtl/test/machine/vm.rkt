@@ -43,7 +43,7 @@
   (assert-register myvm 'baz 489))
 
 (let ([myvm (run-vm '((assign (val (const 1)))
-                      (branch (#t done))
+                      (branch (#t (const done)))
                       (assign (val (const 2)))
                       done))])
   (assert-register myvm 'val 1))
@@ -51,14 +51,14 @@
 (let ([myvm (run-vm '((assign (val (const 1)))
                       loop
                       (assign (val (op +) (reg val) (const 1)))
-                      (branch (((op <) (reg val) (const 10)) loop))))])
+                      (branch (((op <) (reg val) (const 10)) (const loop)))))])
   (assert-register myvm 'val 10))
 
 (let ([myvm (run-vm '((assign (val (const 1)))
                       loop
                       (assign (val (op +) (reg val) (const 1)))
-                      (branch (((op eq?) (reg val) (const 5)) done)
-                              (((op <) (reg val) (const 10)) loop))
+                      (branch (((op eq?) (reg val) (const 5)) (const done))
+                              (((op <) (reg val) (const 10)) (const loop)))
                       done))])
   (assert-register myvm 'val 5))
 
@@ -71,12 +71,22 @@
   (assert-register myvm 'a 69)
   (assert-register myvm 'b 420))
 
+;; branch from register
+(let ([myvm (run-vm '((assign (label-reg (const a)))
+                      (branch (#t (reg label-reg)))
+                      (assign (val (const wrong)))
+                      (branch (#t (const done)))
+                      a
+                      (assign (val (const right)))
+                      done))])
+  (assert-register myvm 'val 'right))
+
 ;; GCD
 (let ([myvm (new vm [environment test-environment] [instructions '(test-b
-                                    (branch (((op eq?) (reg b) (const 0)) done))
+                                    (branch (((op eq?) (reg b) (const 0)) (const done)))
                                     (assign (a (reg b))
                                             (b (op remainder) (reg a) (reg b)))
-                                    (branch (#t test-b))
+                                    (branch (#t (const test-b)))
                                     done
                                     (assign (result (reg a))))])])
   (send myvm vm-set-register-value! 'a 24)
@@ -88,11 +98,11 @@
 (let ([myvm (new vm [environment test-environment] [instructions '((assign (prev (const 0))
                                             (curr (const 1)))
                                     test-n
-                                    (branch (((op eq?) (reg n) (const 0)) done))
+                                    (branch (((op eq?) (reg n) (const 0)) (const done)))
                                     (assign (curr (op +) (reg prev) (reg curr))
                                             (prev (reg curr))
                                             (n (op -) (reg n) (const 1)))
-                                    (branch (#t test-n))
+                                    (branch (#t (const test-n)))
                                     done
                                     (assign (result (reg prev))))])])
   (send myvm vm-set-register-value! 'n 100)
@@ -102,10 +112,10 @@
 ;; Factorial
 (let ([myvm (new vm [environment test-environment] [instructions '((assign (product (const 1)))
                                     test-n
-                                    (branch (((op eq?) (reg n) (const 0)) done))
+                                    (branch (((op eq?) (reg n) (const 0)) (const done)))
                                     (assign (product (op *) (reg n) (reg product))
                                             (n (op -) (reg n) (const 1)))
-                                    (branch (#t test-n))
+                                    (branch (#t (const test-n)))
                                     done
                                     (assign (result (reg product))))])])
   (send myvm vm-set-register-value! 'n 5)
