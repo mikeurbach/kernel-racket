@@ -119,9 +119,10 @@
             (set-register-value! register (apply operator-proc (list args environment)))))))
 
     (define (make-branch predicates labels)
-      (let ([predicate-procs (make-branch-predicates predicates)])
+      (let ([predicate-procs (make-branch-predicates predicates)]
+            [label-procs (map (make-primitive-exp registers) labels)])
         (lambda ()
-          (test-branch-predicates predicate-procs labels))))
+          (test-branch-predicates predicate-procs label-procs))))
 
     (define (make-branch-predicates predicates)
       (if (empty? predicates)
@@ -139,14 +140,14 @@
                (apply operator-proc (list args environment)))))]
         [#t (lambda () #t)]))
 
-    (define (test-branch-predicates predicate-procs labels)
+    (define (test-branch-predicates predicate-procs label-procs)
       (if (empty? predicate-procs)
           (advance-pc!)
           (let ([predicate-proc (car predicate-procs)]
-                [label (car labels)])
+                [label-proc (car label-procs)])
             (if (predicate-proc)
-                (set-pc! label)
-                (test-branch-predicates (cdr predicate-procs) (cdr labels))))))
+                (set-pc! (label-proc))
+                (test-branch-predicates (cdr predicate-procs) (cdr label-procs))))))
 
     (define (make-primitive-exp registers-before)
       (lambda (expression)
