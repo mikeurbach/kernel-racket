@@ -8,10 +8,17 @@
  "src/core/symbol.rkt"
  "./../rtl/src/machine/vm.rkt")
 
+(struct compiled-operative (entry argl val continue))
+
 (define compiler-environment (make-environment (list global-env)))
 (bind! compiler-environment 'lookup (make-applicative lookup))
 (bind! compiler-environment 'match! (make-applicative match!))
 (bind! compiler-environment 'operate (make-applicative operate))
+(bind! compiler-environment 'compiled-operative (make-applicative compiled-operative))
+(bind! compiler-environment 'compiled-operative-entry (make-applicative compiled-operative-entry))
+(bind! compiler-environment 'compiled-operative-argl (make-applicative compiled-operative-argl))
+(bind! compiler-environment 'compiled-operative-val (make-applicative compiled-operative-val))
+(bind! compiler-environment 'compiled-operative-continue (make-applicative compiled-operative-continue))
 
 (define prelude
   `((assign (env (const ,compiler-environment)))))
@@ -84,7 +91,34 @@
        (assign (,target (op inert)))))))
 
 (define (compile-vau expr target linkage)
-  'compiling-vau)
+  (letrec ([entry (vau-entry-label "")]
+           [after (vau-after-label "")]
+           [argl (argl-name "compiled")]
+           [val (val-name "compiled")]
+           [continue (continue-name "compiled")]
+           [env (env-name "local")]
+           [vau-linkage (if (eq? linkage 'next) after linkage)])
+    (append
+     (end-with-linkage
+      vau-linkage
+      (compile-vau-constructor target env entry argl val continue))
+     (list entry)
+     (compile-vau-body expr env argl val continue)
+     (list after))))
+
+(define (compile-vau-constructor target env entry argl val continue)
+  `((assign (,env (op list) (reg env)))
+    (assign (,env (op make-environment) (reg ,env)))
+    (assign (,target (op compiled-operative) (const ,entry) (const ,argl) (const ,val) (const ,continue)))))
+
+(define (compile-vau-body expr env argl val continue)
+  (let ([ptree (vau-ptree expr)]
+        [eparam (vau-eparam expr)]
+        [body (vau-body expr)])
+    (append
+     `((assign (,env (op match!) (const ,ptree) (reg ,argl) (reg ,env)))
+       (assign (,env (op match!) (const ,eparam) (reg env) (reg ,env))))
+     (compile body val continue))))
 
 (define (compile-wrap expr target linkage)
   'compiling-wrap)
@@ -163,12 +197,10 @@
   `((assign (,val (op operate) (reg ,proc) (reg ,argl) (reg env)))))
 
 (define (compile-linkage linkage)
-  (cond [(eq? linkage 'return)
-         '((branch (#t continue)))]
-        [(eq? linkage 'next)
+  (cond [(eq? linkage 'next)
          '()]
         [else
-         `((branch (#t ,linkage)))]))
+         `((branch (#t (reg ,linkage))))]))
 
 (define (end-with-linkage linkage instructions)
   (append instructions (compile-linkage linkage)))
@@ -183,9 +215,13 @@
 (define operate-label  (unique-label "-operate-"))
 (define if-false-label (unique-label "if-false-"))
 (define if-done-label (unique-label "if-done-"))
+(define vau-entry-label (unique-label "vau-entry-"))
+(define vau-after-label (unique-label "vau-after-"))
 (define proc-name (unique-label "-proc-"))
 (define argl-name (unique-label "-argl-"))
 (define val-name (unique-label "-val-"))
+(define continue-name (unique-label "-continue-"))
+(define env-name (unique-label "-env-"))
 
 ;; these should be shared with interpreter
 (define (if-predicate expr) (cadr expr))
@@ -193,6 +229,9 @@
 (define (if-alternative expr) (cadddr expr))
 (define (define-ptree expr) (cadr expr))
 (define (define-expr expr) (caddr expr))
+(define (vau-ptree expr) (cadr expr))
+(define (vau-eparam expr) (caddr expr))
+(define (vau-body expr) (cadddr expr))
 (define (combination-operator expr) (car expr))
 (define (combination-operands expr) (cdr expr))
 
