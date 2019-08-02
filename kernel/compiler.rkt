@@ -27,6 +27,11 @@
         [(kernel-pair? expr) (compile-combination expr target linkage)]
         [else (compile-self-evaluating expr target linkage)]))
 
+(define (compile-self-evaluating expr target linkage)
+  (end-with-linkage
+   linkage
+   `((assign (,target (const ,expr))))))
+
 (define (compile-symbol-lookup expr target linkage)
   (end-with-linkage
    linkage
@@ -41,13 +46,31 @@
                  [(eq? operator '$vau) (compile-vau expr target linkage)]
                  [(eq? operator 'wrap) (compile-wrap expr target linkage)]
                  [(eq? operator 'unwrap) (compile-unwrap expr target linkage)]
-                 [(eq? operator 'eval) (compile-eval expr target linkage)]
+                 [(eq? operator 'eval) (compile-eval expr target linkage)] ;; ?
                  [else (compile-general-combination expr target linkage)])]
           [else
            (compile expr (proc-name "<anonymous>") 'next)])))
 
 (define (compile-if expr target linkage)
-  'compiling-if)
+  (letrec ([false-label (if-false-label "")]
+           [done-label (if-done-label "")]
+           [predicate (if-predicate expr)]
+           [consequent (if-consequent expr)]
+           [alternative (if-alternative expr)]
+           [consequent-linkage (if (eq? linkage 'next) done-label linkage)])
+    (append
+     (compile-if-predicate predicate false-label)
+     (compile consequent target consequent-linkage)
+     (list false-label)
+     (compile alternative target linkage)
+     (list done-label))))
+
+(define (compile-if-predicate predicate label)
+  (letrec ([val (val-name "if")]
+           [compiled-predicate (compile predicate val 'next)])
+    (append
+     compiled-predicate
+     `((branch (((op eq?) (reg ,val) (const #f)) ,label))))))
 
 (define (compile-define expr target linkage)
   'compiling-define)
@@ -131,11 +154,6 @@
 (define (compile-operate proc argl val)
   `((assign (,val (op operate) (reg ,proc) (reg ,argl) (reg env)))))
 
-(define (compile-self-evaluating expr target linkage)
-  (end-with-linkage
-   linkage
-   `((assign (,target (const ,expr))))))
-
 (define (compile-linkage linkage)
   (cond [(eq? linkage 'return)
          '((branch (#t continue)))]
@@ -155,10 +173,15 @@
 
 (define applicative-prep-label (unique-label "-applicative-prep-"))
 (define operate-label  (unique-label "-operate-"))
+(define if-false-label (unique-label "if-false-"))
+(define if-done-label (unique-label "if-done-"))
 (define proc-name (unique-label "-proc-"))
 (define argl-name (unique-label "-argl-"))
 (define val-name (unique-label "-val-"))
 
+(define (if-predicate expr) (cadr expr))
+(define (if-consequent expr) (caddr expr))
+(define (if-alternative expr) (cadddr expr))
 (define (combination-operator expr) (car expr))
 (define (combination-operands expr) (cdr expr))
 
