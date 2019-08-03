@@ -12,22 +12,37 @@
     (init-field instructions)
     (init-field environment)
 
+    (define (hash-merge h1 h2)
+      (hash-union h1 h2 #:combine/key (lambda (k v1 v2) v2)))
+
     (define (traverse-instructions processor insts)
       (if (empty? insts)
           (hash)
           (let ([processed (processor (car insts))]
                 [tail (traverse-instructions processor (cdr insts))])
-            (hash-union processed tail #:combine/key (lambda (k v1 v2) v2)))))
+            (hash-merge processed tail))))
 
     (define (extract-inst-registers instruction)
       (match instruction
-        [(list 'assign (list targets _ ...) ...)
-         (traverse-instructions extract-assign-register targets)]
+        [(list 'assign (list targets operands ...) ...)
+         (hash-merge
+          (traverse-instructions extract-assign-target targets)
+          (traverse-instructions extract-assign-operands operands))]
+        [(list 'branch clauses ...)
+         (traverse-instructions extract-branch-operands clauses)]
         [_ (hash)]))
 
-    (define (extract-assign-register target)
+    (define (extract-assign-target target)
       (match target
         [(list _ name) (hash name (register #f))]))
+
+    (define (extract-assign-operands operands)
+      (traverse-instructions extract-assign-operand operands))
+
+    (define (extract-assign-operand operand)
+      (match operand
+        [(list 'reg name) (hash name (register #f))]
+        [_ (hash)]))
 
     (define (extract-inst-operators instruction)
       (match instruction
@@ -47,6 +62,12 @@
       (match clause
         [(list (list (list 'op operator) _ ...) _)
          (hash operator (combiner-proc (lookup operator environment)))]
+        [_ (hash)]))
+
+    (define (extract-branch-operands clauses)
+      (match clauses
+        [(list operation (list 'reg name))
+         (hash name (register #f))]
         [_ (hash)]))
 
     (define (combiner-proc combiner)
@@ -238,3 +259,6 @@
          (displayln (format "~v: ~v" key (register-value value))))))
 
     (super-new)))
+
+(define-syntax-rule (debug symbol)
+  (displayln (format (string-append (symbol->string 'symbol) ": ~v") symbol)))
