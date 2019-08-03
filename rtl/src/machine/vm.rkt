@@ -21,12 +21,13 @@
 
     (define (extract-inst-registers instruction)
       (match instruction
-        [(list 'assign (list names _ ...) ...)
-         (traverse-instructions extract-assign-register names)]
+        [(list 'assign (list targets _ ...) ...)
+         (traverse-instructions extract-assign-register targets)]
         [_ (hash)]))
 
-    (define (extract-assign-register name)
-      (hash name (register #f)))
+    (define (extract-assign-register target)
+      (match target
+        [(list _ name) (hash name (register #f))]))
 
     (define (extract-inst-operators instruction)
       (match instruction
@@ -92,31 +93,46 @@
     (define (make-assign-proc registers-before)
       (lambda (instruction)
         (match instruction
-          [(list name (list 'const value))
-           (make-assign-const name value)]
-          [(list name (list 'reg arg-name))
-           (make-assign-reg name arg-name registers-before)]
-          [(list name (list 'op operator) inputs ...)
-           (make-assign-op name operator inputs registers-before)])))
+          [(list target (list 'const value))
+           (make-assign-const target value)]
+          [(list target (list 'reg arg-name))
+           (make-assign-reg target arg-name registers-before)]
+          [(list target (list 'alias arg-name))
+           (make-assign-alias target arg-name registers-before)]
+          [(list target (list 'op operator) inputs ...)
+           (make-assign-op target operator inputs registers-before)])))
 
-    (define (make-assign-const name value)
+    (define (make-assign-const target value)
       (lambda ()
-        (let ([register (hash-ref registers name)])
+        (let ([register (assign-target-register target)])
           (set-register-value! register value))))
 
-    (define (make-assign-reg name arg-name registers-before)
+    (define (make-assign-reg target arg-name registers-before)
       (lambda ()
-        (let ([register (hash-ref registers name)]
+        (let ([register (assign-target-register target)]
               [arg-exp (make-register-exp arg-name registers-before)])
           (set-register-value! register (arg-exp)))))
 
-    (define (make-assign-op name operator inputs registers-before)
+    (define (make-assign-alias target arg-name registers-before)
+      (lambda ()
+        (let ([register (assign-target-register target)]
+              [arg-exp (make-alias-exp arg-name registers-before)])
+          (set-register-value! register (arg-exp)))))
+
+    (define (make-assign-op target operator inputs registers-before)
       (let ([operator-proc (hash-ref operators operator)]
-            [register (hash-ref registers name)]
+            [register (assign-target-register target)]
             [arg-exps (map (make-primitive-exp registers-before) inputs)])
         (lambda ()
           (let ([args (map (lambda (e) (e)) arg-exps)])
             (set-register-value! register (apply operator-proc (list args environment)))))))
+
+    (define (assign-target-register target)
+      (match target
+        [(list 'reg name) (hash-ref registers name)]
+        [(list 'alias name)
+         (let ([alias-register (hash-ref registers name)])
+           (hash-ref registers (register-value alias-register)))]))
 
     (define (make-branch predicates labels)
       (let ([predicate-procs (make-branch-predicates predicates)]
@@ -153,7 +169,8 @@
       (lambda (expression)
         (match expression
           [(list 'const value) (make-const-exp value)]
-          [(list 'reg name) (make-register-exp name registers-before)])))
+          [(list 'reg name) (make-register-exp name registers-before)]
+          [(list 'alias name) (make-alias-exp name registers-before)])))
 
     (define (make-const-exp value)
       (lambda () value))
@@ -162,6 +179,12 @@
       (lambda ()
         (let ([register (hash-ref registers-before name)])
           (register-value register))))
+
+    (define (make-alias-exp name registers-before)
+      (lambda ()
+        (letrec ([alias-register (hash-ref registers-before name)]
+                 [target-register (hash-ref registers-before (register-value alias-register))])
+          (register-value target-register))))
 
     (define (advance-pc!)
       (let ([new-pc (cdr (register-value pc))])
