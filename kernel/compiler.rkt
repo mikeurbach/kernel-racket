@@ -124,25 +124,27 @@
      (compile body val continue local-env))))
 
 (define (compile-wrap expr target linkage env)
-  (letrec ([sub-expr (wrap-expr expr)]
-           [compiled-expr (compile sub-expr target 'next env)])
+  (letrec ([body (wrap-body expr)]
+           [compiled-body (compile body target 'next env)])
     (end-with-linkage
      linkage
      (append
-      compiled-expr
+      compiled-body
       `((assign ((reg ,target) (op wrap) (reg ,target))))))))
 
 (define (compile-unwrap expr target linkage env)
-  (letrec ([sub-expr (unwrap-expr expr)]
-           [compiled-expr (compile sub-expr target 'next env)])
+  (letrec ([body (unwrap-body expr)]
+           [compiled-body (compile body target 'next env)])
     (end-with-linkage
      linkage
      (append
-      compiled-expr
+      compiled-body
       `((assign ((reg ,target) (op unwrap) (reg ,target))))))))
 
 (define (compile-eval expr target linkage env)
-  'compiling-eval)
+  (let ([body (eval-body expr)]
+        [env-name (eval-env expr)])
+    (compile body target linkage env-name)))
 
 (define (compile-general-combination expr target linkage env)
   (letrec ([operator-name (if (symbol? (combination-operator expr)) (symbol->string (combination-operator expr)) "<operator>")]
@@ -287,8 +289,10 @@
 (define (vau-ptree expr) (cadr expr))
 (define (vau-eparam expr) (caddr expr))
 (define (vau-body expr) (cadddr expr))
-(define (wrap-expr expr) (cadr expr))
-(define (unwrap-expr expr) (cadr expr))
+(define (wrap-body expr) (cadr expr))
+(define (unwrap-body expr) (cadr expr))
+(define (eval-body expr) (cadr expr))
+(define (eval-env expr) (caddr expr))
 (define (combination-operator expr) (car expr))
 (define (combination-operands expr) (cdr expr))
 
