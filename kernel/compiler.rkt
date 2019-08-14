@@ -1,7 +1,7 @@
 #lang racket
 
 (require
- (only-in kernel global-env)
+ (only-in kernel/core global-env)
  "src/core/combiner.rkt"
  "src/core/environment.rkt"
  "src/core/pair.rkt"
@@ -11,6 +11,7 @@
 (struct compound-operative (entry argl val continue))
 
 (define compiler-environment (make-environment (list global-env)))
+(bind! compiler-environment 'remainder (make-applicative remainder))
 (bind! compiler-environment 'lookup (make-applicative lookup))
 (bind! compiler-environment 'match! (make-applicative match!))
 (bind! compiler-environment 'operate (make-applicative operate))
@@ -60,7 +61,7 @@
                  [(eq? operator 'eval) (compile-eval expr target linkage env)] ;; ?
                  [else (compile-general-combination expr target linkage env)])]
           [else
-           (compile expr (proc-name "<anonymous>") 'next env)])))
+           (compile-general-combination expr target linkage env)])))
 
 (define (compile-if expr target linkage env)
   (letrec ([false-label (if-false-label "")]
@@ -110,7 +111,7 @@
      (list after))))
 
 (define (compile-vau-constructor env target local-env entry argl val continue)
-  `((assign ((reg ,local-env) (op list) (reg ,env)))
+  `((assign ((reg ,local-env) (op cons) (reg ,env) (const ())))
     (assign ((reg ,local-env) (op make-environment) (reg ,local-env)))
     (assign ((reg ,target) (op compound-operative) (const ,entry) (const ,argl) (const ,val) (const ,continue)))))
 
@@ -147,7 +148,7 @@
     (compile body target linkage env-name)))
 
 (define (compile-general-combination expr target linkage env)
-  (letrec ([operator-name (if (symbol? (combination-operator expr)) (symbol->string (combination-operator expr)) "<operator>")]
+  (letrec ([operator-name (if (symbol? (combination-operator expr)) (symbol->string (combination-operator expr)) "<anonymous>")]
            [label-for-applicative (applicative-prep-label operator-name)]
            [label-for-operate (operate-label operator-name)]
            [label-for-compound (compound-label operator-name)]
@@ -199,7 +200,7 @@
         (let ([last-operand-code
                (append
                 (car operand-codes)
-                `((assign ((reg ,argl) (op list) (reg ,val)))))])
+                `((assign ((reg ,argl) (op cons) (reg ,val) (const ())))))])
           (if (empty? (cdr operand-codes))
               last-operand-code
               (append
@@ -298,3 +299,11 @@
 
 (define-syntax-rule (debug symbol)
   (displayln (format (string-append (symbol->string 'symbol) ": ~v") symbol)))
+
+;; (define prelude
+;;   (parameterize ([read-accept-reader #t])
+;;     (letrec ([library-definitions (cdr (cadddr (read (open-input-file "src/library/base.rkt"))))]
+;;              [library-instructions (compile-list library-definitions)])
+;;       (append
+;;        `((assign ((reg env) (const ,compiler-environment))))
+;;        library-instructions))))
