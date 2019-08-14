@@ -219,7 +219,7 @@
         next-operand-code
         (append
          next-operand-code
-         (compile-rest-operands (cdr operand-codes))))))
+         (compile-rest-operands argl val (cdr operand-codes))))))
 
 (define (compile-compound-branch proc compound-label)
   `((branch (((op compound-operative?) (reg ,proc)) (const ,compound-label)))))
