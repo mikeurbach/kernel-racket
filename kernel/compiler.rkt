@@ -100,7 +100,7 @@
            [argl (argl-name "compiled")]
            [val (val-name "compiled")]
            [continue (continue-name "compiled")]
-           [local-env (env-name "local")]
+           [local-env (vau-eparam expr)]
            [vau-linkage (if (eq? linkage 'next) after linkage)])
     (append
      (end-with-linkage
@@ -117,11 +117,10 @@
 
 (define (compile-vau-body env expr local-env argl val continue)
   (let ([ptree (vau-ptree expr)]
-        [eparam (vau-eparam expr)]
         [body (vau-body expr)])
     (append
      `((assign ((reg ,devnull) (op match!) (const ,ptree) (reg ,argl) (reg ,local-env)))
-       (assign ((reg ,devnull) (op match!) (const ,eparam) (reg ,env) (reg ,local-env))))
+       (assign ((reg ,devnull) (op match!) (const ,local-env) (reg, env) (reg ,local-env))))
      (compile body val continue local-env))))
 
 (define (compile-wrap expr target linkage env)
