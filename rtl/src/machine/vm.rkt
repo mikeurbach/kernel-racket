@@ -7,6 +7,8 @@
  racket/hash)
 (provide vm)
 
+(struct executable-instruction (instruction proc))
+
 (define vm
   (class object%
     (init-field instructions)
@@ -79,12 +81,16 @@
       (map extract-execution-proc insts))
 
     (define (extract-execution-proc instruction)
-      (match instruction
-        [label #:when (symbol? label) label]
-        [(list 'assign assignments ...)
-         (make-assign assignments)]
-        [(list 'branch (list predicates labels) ...)
-         (make-branch predicates labels)]))
+      (let ([execution-proc
+             (match instruction
+               [label #:when (symbol? label) label]
+               [(list 'assign assignments ...)
+                (make-assign assignments)]
+               [(list 'branch (list predicates labels) ...)
+                (make-branch predicates labels)])])
+        (if (symbol? execution-proc)
+            execution-proc
+            (executable-instruction instruction execution-proc))))
 
     (define (extract-basic-blocks insts)
       (if (empty? insts)
@@ -234,8 +240,18 @@
         (if (empty? insts)
             'done
             (begin
-              ((car insts))
+              ((executable-instruction-proc (car insts)))
               (execute)))))
+
+    (define/public (trace)
+      (let ([insts (register-value pc)])
+        (if (empty? insts)
+            'done
+            (begin
+              (let ([executable-instruction (car insts)])
+                (displayln (executable-instruction-instruction executable-instruction))
+                ((executable-instruction-proc executable-instruction))
+                (trace))))))
 
     (define/public (vm-get-register-value name)
       (register-value (hash-ref registers name)))
