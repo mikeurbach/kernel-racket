@@ -100,7 +100,7 @@
            [argl (argl-name "compiled")]
            [val (val-name "compiled")]
            [continue (continue-name "compiled")]
-           [local-env (vau-eparam expr)]
+           [local-env (env-name "local")]
            [vau-linkage (if (eq? linkage 'next) after linkage)])
     (append
      (end-with-linkage
@@ -117,10 +117,11 @@
 
 (define (compile-vau-body env expr local-env argl val continue)
   (let ([ptree (vau-ptree expr)]
-        [body (vau-body expr)])
+        [body (vau-body expr)]
+        [eparam (vau-eparam expr)])
     (append
      `((assign ((reg ,devnull) (op match!) (const ,ptree) (reg ,argl) (reg ,local-env)))
-       (assign ((reg ,devnull) (op match!) (const ,local-env) (reg, env) (reg ,local-env))))
+       (assign ((reg ,devnull) (op match!) (const ,eparam) (reg ,local-env) (reg ,local-env))))
      (compile body val continue local-env))))
 
 (define (compile-wrap expr target linkage env)
@@ -143,8 +144,11 @@
 
 (define (compile-eval expr target linkage env)
   (let ([body (eval-body expr)]
-        [env-name (eval-env expr)])
-    (compile body target linkage env-name)))
+        [env-name (eval-env expr)]
+        [temp-env-name (env-name "eval")])
+    (append
+     `((assign ((reg ,temp-env-name) (op lookup) (const ,env-name) (reg ,env))))
+     (compile body target linkage temp-env-name))))
 
 (define (compile-general-combination expr target linkage env)
   (letrec ([operator-name (if (symbol? (combination-operator expr)) (symbol->string (combination-operator expr)) "<anonymous>")]
