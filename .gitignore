@@ -1,7 +1,11 @@
 *~
-compiled/
 *.html
 *.css
 *.js
 *.rktd
 *.sxref
+compiled/
+verilog/durin_verilog.cache
+verilog/durin_verilog.hw
+verilog/durin_verilog.ip_user_files
+verilog/durin_verilog.sim

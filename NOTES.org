@@ -1,52 +1,8 @@
-* Dissertation
-** TODO introduction section
-** TODO background section
-** TODO kernel section
-* Kernel
-** TODO explore using a struct instead of the actual symbol |#ignore|
-** TODO write more unit tests for core and library
-*** TODO worth adding in check-exn?
-** TODO add built-in combiner to create new types use it uniformly for ignore, inert, pair, boolean, etc.
-*** Idea 1:
-Consider the following form:
-
-($type pair
-  (data
-    (car any)
-    (cdr any))
-  (reader
-    ...))
-
-This $type form performs the following:
-
-1. Create a constructor named `pair` to construct objects of the `pair` type, which expects two arguments of the `any` type
-2. Create a predicate named `pair?`, which expects one argument, and returns true iff the argument is an object of the `pair` type
-3. Creates functions named `car` and `cdr`, which each expect one argument of the `pair` type, and return the datum passed to the pair's constructor in the first and second argument, respectively
-4. Modifies reader ...
-5. Potentially forms for defining functions and axioms
-*** Idea 2:
-Classical, recursive ADT, a-la Haskell
-
-($type (pair a)
-  (nil)
-  (cons a (pair a)))
-
-This $type form performs the following:
-
-1. Modifies reader to add support for `()` and `(cons a b)` forms, which read into pair objects
-2. Creates a predicate named `pair?` which expects one argument and returns true iff the argument is an object of the `pair` type
-** TODO add a real reader, so we don't have to use #lang-sexp
-*** Probably related to the above
-* RTL
-** Operations
-*** Labels
-**** DONE 'foo
-*** Assignment
-**** DONE (assign <register-name> (reg <register-name>))
-**** DONE (assign <register-name> (const <constant-value>))
-**** DONE (assign <register-name> (op <operation-name> <input1> ... <inputn>))
-**** TODO tests!
-**** TODO multiple assignment in one instruction
-*** Conditionals
-**** DONE (branch ((op <operation-name> <input1> ... <inputn>) <label>) ... (#t <label>))
-**** TODO tests!
+* Compiler Passes
+** Collect all data types
+*** Build layout(s) for datapath buses etc. including type tag
+*** Build block rams and garbage collectors for each type
+** Collect all symbols
+*** Build symbol table
+* Ideas
+** Can we use a continuation register for sub-FSM calls?
