@@ -6,3 +6,4 @@
 *** Build symbol table
 * Ideas
 ** Can tighten up the sub-FSM calls?
+** Easy to share states by hand, but how to automate?
