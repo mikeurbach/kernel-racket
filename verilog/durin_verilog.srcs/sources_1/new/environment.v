@@ -32,27 +32,21 @@ module environment #(parameter TYPE_WIDTH = 1, DATA_WIDTH = 8) (
 );
   localparam STATE_INIT = 0;
   localparam STATE_OP_CASE = 1;
-  localparam STATE_NEW_ALLOC = 2;
-  localparam STATE_NEW_WAIT_BUSY = 3;
-  localparam STATE_NEW_WAIT_DONE = 4;
-  localparam STATE_BIND_ALLOC_TUPLE = 5;
-  localparam STATE_BIND_ALLOC_TUPLE_WAIT_BUSY = 6;
-  localparam STATE_BIND_ALLOC_TUPLE_WAIT_DONE = 7;
-  localparam STATE_BIND_LOAD_CAR = 8;
-  localparam STATE_BIND_LOAD_CAR_WAIT_BUSY = 9;
-  localparam STATE_BIND_LOAD_CAR_WAIT_DONE = 10;
-  localparam STATE_BIND_ALLOC_LIST = 11;
-  localparam STATE_BIND_ALLOC_LIST_WAIT_BUSY = 12;
-  localparam STATE_BIND_ALLOC_LIST_WAIT_DONE = 13;
-  localparam STATE_BIND_UPDATE_CAR = 14;
-  localparam STATE_BIND_UPDATE_CAR_WAIT_BUSY = 15;
-  localparam STATE_BIND_UPDATE_CAR_WAIT_DONE = 16;
+  localparam STATE_PAIR_WAIT_BUSY = 2;
+  localparam STATE_PAIR_WAIT_DONE = 3;
+  localparam STATE_NEW_ALLOC = 4;
+  localparam STATE_NEW_DONE = 5;
+  localparam STATE_BIND_ALLOC_TUPLE = 6;
+  localparam STATE_BIND_LOAD_CAR = 7;
+  localparam STATE_BIND_ALLOC_LIST = 8;
+  localparam STATE_BIND_UPDATE_CAR = 9;
+  localparam STATE_BIND_DONE = 10;
 
   localparam OP_NEW = 0;
   localparam OP_BIND = 1;
   localparam OP_LOOKUP = 2;
 
-  reg [4:0] state, next_state;
+  reg [3:0] state, next_state, pair_continuation;
   
   reg [TYPE_WIDTH+DATA_WIDTH-1:0] tuple_ref;
   
@@ -86,6 +80,7 @@ module environment #(parameter TYPE_WIDTH = 1, DATA_WIDTH = 8) (
     pair_car <= pair_car;
     pair_cdr <= pair_cdr;
     pair_ref_in <= pair_ref_in;
+    pair_continuation <= pair_continuation;
  
     case (next_state)
       STATE_INIT: begin
@@ -94,16 +89,18 @@ module environment #(parameter TYPE_WIDTH = 1, DATA_WIDTH = 8) (
       STATE_OP_CASE: begin
         busy <= 1'b1;
       end        
+      STATE_PAIR_WAIT_BUSY: begin
+        pair_start <= 1'b0;
+      end
+      STATE_PAIR_WAIT_DONE: begin
+      end
       STATE_NEW_ALLOC: begin
         pair_start <= 1'b1;
         pair_operation <= pair_instance.OP_NEW;
         pair_car <= {1'b1, 8'd0};
         pair_cdr <= {1'b1, 8'd0};
       end
-      STATE_NEW_WAIT_BUSY: begin
-        pair_start <= 1'b0;
-      end
-      STATE_NEW_WAIT_DONE: begin
+      STATE_NEW_DONE: begin
         ref_out <= pair_ref_out;
       end
       STATE_BIND_ALLOC_TUPLE: begin
@@ -112,21 +109,11 @@ module environment #(parameter TYPE_WIDTH = 1, DATA_WIDTH = 8) (
         pair_car <= symbol;
         pair_cdr <= value;
       end
-      STATE_BIND_ALLOC_TUPLE_WAIT_BUSY: begin
-        pair_start <= 1'b0;
-      end
-      STATE_BIND_ALLOC_TUPLE_WAIT_DONE: begin
-        tuple_ref <= pair_ref_out;
-      end
       STATE_BIND_LOAD_CAR: begin
+        tuple_ref <= pair_ref_out;
         pair_start <= 1'b1;
         pair_operation <= pair_instance.OP_CAR;
         pair_ref_in <= ref_in;
-      end
-      STATE_BIND_LOAD_CAR_WAIT_BUSY: begin
-        pair_start <= 1'b0;
-      end
-      STATE_BIND_LOAD_CAR_WAIT_DONE: begin
       end
       STATE_BIND_ALLOC_LIST: begin
         pair_start <= 1'b1;
@@ -134,21 +121,13 @@ module environment #(parameter TYPE_WIDTH = 1, DATA_WIDTH = 8) (
         pair_car <= tuple_ref;
         pair_cdr <= pair_ref_out;
       end
-      STATE_BIND_ALLOC_LIST_WAIT_BUSY: begin
-        pair_start <= 1'b0;
-      end
-      STATE_BIND_ALLOC_LIST_WAIT_DONE: begin
-      end
       STATE_BIND_UPDATE_CAR: begin
         pair_start <= 1'b1;
         pair_operation <= pair_instance.OP_SET_CAR;
         pair_ref_in <= ref_in;
         pair_car <= pair_ref_out;
       end
-      STATE_BIND_UPDATE_CAR_WAIT_BUSY: begin
-        pair_start <= 1'b0;
-      end
-      STATE_BIND_UPDATE_CAR_WAIT_DONE: begin
+      STATE_BIND_DONE: begin
       end
       default: begin
       end
@@ -158,12 +137,13 @@ module environment #(parameter TYPE_WIDTH = 1, DATA_WIDTH = 8) (
   always @(state or start or operation or pair_busy) begin
     // next state logic
     case (state)
-      STATE_INIT:
+      STATE_INIT: begin
         if (start)
           next_state = STATE_OP_CASE;
         else
           next_state = STATE_INIT;
-      STATE_OP_CASE:
+      end 
+      STATE_OP_CASE: begin
         case (operation)
           OP_NEW:
             next_state = STATE_NEW_ALLOC;
@@ -172,66 +152,45 @@ module environment #(parameter TYPE_WIDTH = 1, DATA_WIDTH = 8) (
           default:
             next_state = STATE_INIT;
         endcase
-      STATE_NEW_ALLOC:
-        next_state = STATE_NEW_WAIT_BUSY;
-      STATE_NEW_WAIT_BUSY:
+      end
+      STATE_PAIR_WAIT_BUSY: begin
         if (!pair_busy)
-          next_state = STATE_NEW_WAIT_BUSY;
+          next_state = STATE_PAIR_WAIT_BUSY;
         else
-          next_state = STATE_NEW_WAIT_DONE;
-      STATE_NEW_WAIT_DONE:
+          next_state = STATE_PAIR_WAIT_DONE;
+      end
+      STATE_PAIR_WAIT_DONE: begin
         if (pair_busy)
-          next_state = STATE_NEW_WAIT_DONE;
+          next_state = STATE_PAIR_WAIT_DONE;
         else
-          next_state = STATE_INIT;
-      STATE_BIND_ALLOC_TUPLE:
-        next_state = STATE_BIND_ALLOC_TUPLE_WAIT_BUSY;
-      STATE_BIND_ALLOC_TUPLE_WAIT_BUSY:
-        if (!pair_busy)
-          next_state = STATE_BIND_ALLOC_TUPLE_WAIT_BUSY;
-        else
-          next_state = STATE_BIND_ALLOC_TUPLE_WAIT_DONE;
-      STATE_BIND_ALLOC_TUPLE_WAIT_DONE:
-        if (pair_busy)
-          next_state = STATE_BIND_ALLOC_TUPLE_WAIT_DONE;
-        else
-          next_state = STATE_BIND_LOAD_CAR;
-      STATE_BIND_LOAD_CAR:
-        next_state = STATE_BIND_LOAD_CAR_WAIT_BUSY;
-      STATE_BIND_LOAD_CAR_WAIT_BUSY:
-         if (!pair_busy)
-          next_state = STATE_BIND_LOAD_CAR_WAIT_BUSY;
-        else
-          next_state = STATE_BIND_LOAD_CAR_WAIT_DONE;
-      STATE_BIND_LOAD_CAR_WAIT_DONE:
-        if (pair_busy)
-          next_state = STATE_BIND_LOAD_CAR_WAIT_DONE;
-        else
-          next_state = STATE_BIND_ALLOC_LIST;
-      STATE_BIND_ALLOC_LIST:
-        next_state = STATE_BIND_ALLOC_LIST_WAIT_BUSY;
-      STATE_BIND_ALLOC_LIST_WAIT_BUSY:
-        if (!pair_busy)
-          next_state = STATE_BIND_ALLOC_LIST_WAIT_BUSY;
-        else
-          next_state = STATE_BIND_ALLOC_LIST_WAIT_DONE;
-      STATE_BIND_ALLOC_LIST_WAIT_DONE:
-        if (pair_busy)
-          next_state = STATE_BIND_ALLOC_LIST_WAIT_DONE;
-        else
-          next_state = STATE_BIND_UPDATE_CAR;
-      STATE_BIND_UPDATE_CAR:
-        next_state = STATE_BIND_UPDATE_CAR_WAIT_BUSY;
-      STATE_BIND_UPDATE_CAR_WAIT_BUSY:
-        if (!pair_busy)
-          next_state = STATE_BIND_UPDATE_CAR_WAIT_BUSY;
-        else
-          next_state = STATE_BIND_UPDATE_CAR_WAIT_DONE;
-      STATE_BIND_UPDATE_CAR_WAIT_DONE:
-        if (pair_busy)
-          next_state = STATE_BIND_UPDATE_CAR_WAIT_DONE;
-        else
-          next_state = STATE_INIT;
+          next_state = pair_continuation;
+      end
+      STATE_NEW_ALLOC: begin
+        next_state = STATE_PAIR_WAIT_BUSY;
+        pair_continuation = STATE_NEW_DONE;
+      end
+      STATE_NEW_DONE: begin
+        next_state = STATE_INIT;
+      end
+      STATE_BIND_ALLOC_TUPLE: begin
+        next_state = STATE_PAIR_WAIT_BUSY;
+        pair_continuation = STATE_BIND_LOAD_CAR;
+      end
+      STATE_BIND_LOAD_CAR: begin
+        next_state = STATE_PAIR_WAIT_BUSY;
+        pair_continuation = STATE_BIND_ALLOC_LIST;
+      end
+      STATE_BIND_ALLOC_LIST: begin
+        next_state = STATE_PAIR_WAIT_BUSY;
+        pair_continuation = STATE_BIND_UPDATE_CAR;
+      end
+      STATE_BIND_UPDATE_CAR: begin
+        next_state = STATE_PAIR_WAIT_BUSY;
+        pair_continuation = STATE_BIND_DONE;
+      end
+      STATE_BIND_DONE: begin
+        next_state = STATE_INIT;
+      end
       default:
         next_state = STATE_INIT;
     endcase

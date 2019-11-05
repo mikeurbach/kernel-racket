@@ -5,4 +5,4 @@
 ** Collect all symbols
 *** Build symbol table
 * Ideas
-** Can we use a continuation register for sub-FSM calls?
+** Can tighten up the sub-FSM calls?
