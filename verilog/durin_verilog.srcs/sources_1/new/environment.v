@@ -41,14 +41,24 @@ module environment #(parameter TYPE_WIDTH = 1, DATA_WIDTH = 8) (
   localparam STATE_BIND_ALLOC_LIST = 8;
   localparam STATE_BIND_UPDATE_CAR = 9;
   localparam STATE_BIND_DONE = 10;
+  localparam STATE_LOOKUP_LOAD_REF_CAR = 11;
+  localparam STATE_LOOKUP_UPDATE_LIST_REF = 12;
+  localparam STATE_LOOKUP_LIST_REF_CHECK = 13;
+  localparam STATE_LOOKUP_LOAD_LIST_CAR = 14;
+  localparam STATE_LOOKUP_UPDATE_TUPLE_REF = 15;
+  localparam STATE_LOOKUP_LOAD_TUPLE_CAR = 16;
+  localparam STATE_LOOKUP_SYMBOL_CHECK = 17;
+  localparam STATE_LOOKUP_LOAD_LIST_CDR = 18;
+  localparam STATE_LOOKUP_LOAD_TUPLE_CDR = 19;
+  localparam STATE_LOOKUP_DONE = 20;
 
   localparam OP_NEW = 0;
   localparam OP_BIND = 1;
   localparam OP_LOOKUP = 2;
 
-  reg [3:0] state, next_state, pair_continuation;
+  reg [5:0] state, next_state, pair_continuation;
   
-  reg [TYPE_WIDTH+DATA_WIDTH-1:0] tuple_ref;
+  reg [TYPE_WIDTH+DATA_WIDTH-1:0] tuple_ref, list_ref;
   
   // instantiate pair module
   reg pair_start;
@@ -75,6 +85,8 @@ module environment #(parameter TYPE_WIDTH = 1, DATA_WIDTH = 8) (
     // register and output assignments
     busy <= busy;
     ref_out <= ref_out;
+    tuple_ref <= tuple_ref;
+    list_ref <= list_ref;
     pair_start <= pair_start;
     pair_operation <= pair_operation;
     pair_car <= pair_car;
@@ -129,6 +141,44 @@ module environment #(parameter TYPE_WIDTH = 1, DATA_WIDTH = 8) (
       end
       STATE_BIND_DONE: begin
       end
+      STATE_LOOKUP_LOAD_REF_CAR: begin
+        pair_start <= 1'b1;
+        pair_operation <= pair_instance.OP_CAR;
+        pair_ref_in <= ref_in;
+      end
+      STATE_LOOKUP_UPDATE_LIST_REF: begin
+        list_ref <= pair_ref_out;
+      end
+      STATE_LOOKUP_LIST_REF_CHECK: begin
+      end
+      STATE_LOOKUP_LOAD_LIST_CAR: begin
+        pair_start <= 1'b1;
+        pair_operation <= pair_instance.OP_CAR;
+        pair_ref_in <= list_ref;
+      end
+      STATE_LOOKUP_UPDATE_TUPLE_REF: begin
+        tuple_ref <= pair_ref_out;
+      end
+      STATE_LOOKUP_LOAD_TUPLE_CAR: begin
+        pair_start <= 1'b1;
+        pair_operation <= pair_instance.OP_CAR;
+        pair_ref_in <= tuple_ref;
+      end
+      STATE_LOOKUP_SYMBOL_CHECK: begin
+      end
+      STATE_LOOKUP_LOAD_LIST_CDR: begin
+        pair_start <= 1'b1;
+        pair_operation <= pair_instance.OP_CDR;
+        pair_ref_in <= list_ref;
+      end
+      STATE_LOOKUP_LOAD_TUPLE_CDR: begin
+        pair_start <= 1'b1;
+        pair_operation <= pair_instance.OP_CDR;
+        pair_ref_in <= tuple_ref;
+      end
+      STATE_LOOKUP_DONE: begin
+        ref_out <= pair_ref_out;
+      end
       default: begin
       end
     endcase 
@@ -149,6 +199,8 @@ module environment #(parameter TYPE_WIDTH = 1, DATA_WIDTH = 8) (
             next_state = STATE_NEW_ALLOC;
           OP_BIND:
             next_state = STATE_BIND_ALLOC_TUPLE;
+          OP_LOOKUP:
+            next_state = STATE_LOOKUP_LOAD_REF_CAR;
           default:
             next_state = STATE_INIT;
         endcase
@@ -189,6 +241,47 @@ module environment #(parameter TYPE_WIDTH = 1, DATA_WIDTH = 8) (
         pair_continuation = STATE_BIND_DONE;
       end
       STATE_BIND_DONE: begin
+        next_state = STATE_INIT;
+      end
+      STATE_LOOKUP_LOAD_REF_CAR: begin
+        next_state = STATE_PAIR_WAIT_BUSY;
+        pair_continuation = STATE_LOOKUP_UPDATE_LIST_REF;
+      end
+      STATE_LOOKUP_UPDATE_LIST_REF: begin
+        next_state = STATE_LOOKUP_LIST_REF_CHECK;
+      end
+      STATE_LOOKUP_LIST_REF_CHECK: begin
+        if (list_ref == {1'b1, 8'd0})
+          next_state = STATE_LOOKUP_DONE;
+        else
+          next_state = STATE_LOOKUP_LOAD_LIST_CAR;
+      end
+      STATE_LOOKUP_LOAD_LIST_CAR: begin
+        next_state = STATE_PAIR_WAIT_BUSY;
+        pair_continuation = STATE_LOOKUP_UPDATE_TUPLE_REF;
+      end
+      STATE_LOOKUP_UPDATE_TUPLE_REF: begin
+        next_state = STATE_LOOKUP_LOAD_TUPLE_CAR;
+      end
+      STATE_LOOKUP_LOAD_TUPLE_CAR: begin
+        next_state = STATE_PAIR_WAIT_BUSY;
+        pair_continuation = STATE_LOOKUP_SYMBOL_CHECK;
+      end
+      STATE_LOOKUP_SYMBOL_CHECK: begin
+        if (pair_ref_out == symbol)
+          next_state = STATE_LOOKUP_LOAD_TUPLE_CDR;
+        else
+          next_state = STATE_LOOKUP_LOAD_LIST_CDR;
+      end
+      STATE_LOOKUP_LOAD_LIST_CDR: begin
+        next_state = STATE_PAIR_WAIT_BUSY;
+        pair_continuation = STATE_LOOKUP_UPDATE_LIST_REF;
+      end
+      STATE_LOOKUP_LOAD_TUPLE_CDR: begin
+        next_state = STATE_PAIR_WAIT_BUSY;
+        pair_continuation = STATE_LOOKUP_DONE;
+      end
+      STATE_LOOKUP_DONE: begin
         next_state = STATE_INIT;
       end
       default:

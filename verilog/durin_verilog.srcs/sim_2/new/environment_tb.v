@@ -53,7 +53,28 @@ module environment_tb;
     value = {1'b0, 8'd69};
     
     `call_module;
+    
+    // lookup some symbols
+    operation = environment_instance.OP_LOOKUP;
+    
+    symbol = {1'b0, 8'd1};
+    
+    `call_module;
         
+    `assert(ref_out, {1'b0, 8'd42});
+    
+    symbol = {1'b0, 8'd2};
+    
+    `call_module;
+    
+    `assert(ref_out, {1'b0, 8'd69});
+
+    symbol = {1'b0, 8'd3};
+    
+    `call_module;
+    
+    `assert(ref_out, {1'b1, 8'd0});
+    
     $finish;
   end
 endmodule
