@@ -4,6 +4,7 @@
 *** Build block rams and garbage collectors for each type
 ** Collect all symbols
 *** Build symbol table
-* Ideas
+* Ideas and Questions
 ** Can tighten up the sub-FSM calls?
 ** Easy to share states by hand, but how to automate?
+** How to remove hard-coded bitwidth in literals? (parameters might just be done in intermediate lang)
