@@ -41,16 +41,20 @@ module environment #(parameter TYPE_WIDTH = 1, DATA_WIDTH = 8) (
   localparam STATE_BIND_ALLOC_LIST = 8;
   localparam STATE_BIND_UPDATE_CAR = 9;
   localparam STATE_BIND_DONE = 10;
-  localparam STATE_LOOKUP_LOAD_REF_CAR = 11;
-  localparam STATE_LOOKUP_UPDATE_LIST_REF = 12;
-  localparam STATE_LOOKUP_LIST_REF_CHECK = 13;
-  localparam STATE_LOOKUP_LOAD_LIST_CAR = 14;
-  localparam STATE_LOOKUP_UPDATE_TUPLE_REF = 15;
-  localparam STATE_LOOKUP_LOAD_TUPLE_CAR = 16;
-  localparam STATE_LOOKUP_SYMBOL_CHECK = 17;
-  localparam STATE_LOOKUP_LOAD_LIST_CDR = 18;
-  localparam STATE_LOOKUP_LOAD_TUPLE_CDR = 19;
-  localparam STATE_LOOKUP_DONE = 20;
+  localparam STATE_LOOKUP_STORE_ENV_REF = 11;
+  localparam STATE_LOOKUP_LOAD_REF_CAR = 12;
+  localparam STATE_LOOKUP_UPDATE_LIST_REF = 13;
+  localparam STATE_LOOKUP_LIST_REF_CHECK = 14;
+  localparam STATE_LOOKUP_LOAD_LIST_CAR = 15;
+  localparam STATE_LOOKUP_UPDATE_TUPLE_REF = 16;
+  localparam STATE_LOOKUP_LOAD_TUPLE_CAR = 17;
+  localparam STATE_LOOKUP_SYMBOL_CHECK = 18;
+  localparam STATE_LOOKUP_LOAD_LIST_CDR = 19;
+  localparam STATE_LOOKUP_LOAD_TUPLE_CDR = 20;
+  localparam STATE_LOOKUP_LOAD_REF_CDR = 21;
+  localparam STATE_LOOKUP_UPDATE_ENV_REF = 22;
+  localparam STATE_LOOKUP_REF_CHECK = 23;
+  localparam STATE_LOOKUP_DONE = 24;
 
   localparam OP_NEW = 0;
   localparam OP_BIND = 1;
@@ -58,7 +62,7 @@ module environment #(parameter TYPE_WIDTH = 1, DATA_WIDTH = 8) (
 
   reg [5:0] state, next_state, pair_continuation;
   
-  reg [TYPE_WIDTH+DATA_WIDTH-1:0] tuple_ref, list_ref;
+  reg [TYPE_WIDTH+DATA_WIDTH-1:0] env_ref, list_ref, tuple_ref;
   
   // instantiate pair module
   reg pair_start;
@@ -85,8 +89,9 @@ module environment #(parameter TYPE_WIDTH = 1, DATA_WIDTH = 8) (
     // register and output assignments
     busy <= busy;
     ref_out <= ref_out;
-    tuple_ref <= tuple_ref;
+    env_ref <= env_ref;
     list_ref <= list_ref;
+    tuple_ref <= tuple_ref;
     pair_start <= pair_start;
     pair_operation <= pair_operation;
     pair_car <= pair_car;
@@ -110,7 +115,7 @@ module environment #(parameter TYPE_WIDTH = 1, DATA_WIDTH = 8) (
         pair_start <= 1'b1;
         pair_operation <= pair_instance.OP_NEW;
         pair_car <= {1'b1, 8'd0};
-        pair_cdr <= {1'b1, 8'd0};
+        pair_cdr <= ref_in;
       end
       STATE_NEW_DONE: begin
         ref_out <= pair_ref_out;
@@ -141,10 +146,13 @@ module environment #(parameter TYPE_WIDTH = 1, DATA_WIDTH = 8) (
       end
       STATE_BIND_DONE: begin
       end
+      STATE_LOOKUP_STORE_ENV_REF: begin
+        env_ref <= ref_in;
+      end
       STATE_LOOKUP_LOAD_REF_CAR: begin
         pair_start <= 1'b1;
         pair_operation <= pair_instance.OP_CAR;
-        pair_ref_in <= ref_in;
+        pair_ref_in <= env_ref;
       end
       STATE_LOOKUP_UPDATE_LIST_REF: begin
         list_ref <= pair_ref_out;
@@ -176,6 +184,16 @@ module environment #(parameter TYPE_WIDTH = 1, DATA_WIDTH = 8) (
         pair_operation <= pair_instance.OP_CDR;
         pair_ref_in <= tuple_ref;
       end
+      STATE_LOOKUP_LOAD_REF_CDR: begin
+        pair_start <= 1'b1;
+        pair_operation <= pair_instance.OP_CDR;
+        pair_ref_in <= env_ref;
+      end
+      STATE_LOOKUP_UPDATE_ENV_REF: begin
+        env_ref <= pair_ref_out;
+      end
+      STATE_LOOKUP_REF_CHECK: begin
+      end
       STATE_LOOKUP_DONE: begin
         ref_out <= pair_ref_out;
       end
@@ -200,7 +218,7 @@ module environment #(parameter TYPE_WIDTH = 1, DATA_WIDTH = 8) (
           OP_BIND:
             next_state = STATE_BIND_ALLOC_TUPLE;
           OP_LOOKUP:
-            next_state = STATE_LOOKUP_LOAD_REF_CAR;
+            next_state = STATE_LOOKUP_STORE_ENV_REF;
           default:
             next_state = STATE_INIT;
         endcase
@@ -243,6 +261,9 @@ module environment #(parameter TYPE_WIDTH = 1, DATA_WIDTH = 8) (
       STATE_BIND_DONE: begin
         next_state = STATE_INIT;
       end
+      STATE_LOOKUP_STORE_ENV_REF: begin
+        next_state = STATE_LOOKUP_LOAD_REF_CAR;
+      end
       STATE_LOOKUP_LOAD_REF_CAR: begin
         next_state = STATE_PAIR_WAIT_BUSY;
         pair_continuation = STATE_LOOKUP_UPDATE_LIST_REF;
@@ -252,7 +273,7 @@ module environment #(parameter TYPE_WIDTH = 1, DATA_WIDTH = 8) (
       end
       STATE_LOOKUP_LIST_REF_CHECK: begin
         if (list_ref == {1'b1, 8'd0})
-          next_state = STATE_LOOKUP_DONE;
+          next_state = STATE_LOOKUP_LOAD_REF_CDR;
         else
           next_state = STATE_LOOKUP_LOAD_LIST_CAR;
       end
@@ -280,6 +301,19 @@ module environment #(parameter TYPE_WIDTH = 1, DATA_WIDTH = 8) (
       STATE_LOOKUP_LOAD_TUPLE_CDR: begin
         next_state = STATE_PAIR_WAIT_BUSY;
         pair_continuation = STATE_LOOKUP_DONE;
+      end
+      STATE_LOOKUP_LOAD_REF_CDR: begin
+        next_state = STATE_PAIR_WAIT_BUSY;
+        pair_continuation = STATE_LOOKUP_UPDATE_ENV_REF;
+      end
+      STATE_LOOKUP_UPDATE_ENV_REF: begin
+        next_state = STATE_LOOKUP_REF_CHECK;
+      end
+      STATE_LOOKUP_REF_CHECK: begin
+        if (env_ref == {1'b1, 8'd0})
+          next_state = STATE_LOOKUP_DONE;
+        else
+          next_state = STATE_LOOKUP_LOAD_REF_CAR;
       end
       STATE_LOOKUP_DONE: begin
         next_state = STATE_INIT;
