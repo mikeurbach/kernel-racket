@@ -9,3 +9,6 @@
 ** Easy to share states by hand, but how to automate?
 ** How to remove hard-coded bitwidth in literals? (parameters might just be done in intermediate lang)
 ** How will lazy evaluation fit in?
+* Tasks
+** TODO design final nanopass language for generating verilog modules
+** TODO write out pair and environment modules in the new language
