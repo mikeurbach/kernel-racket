@@ -8,3 +8,4 @@
 ** Can tighten up the sub-FSM calls?
 ** Easy to share states by hand, but how to automate?
 ** How to remove hard-coded bitwidth in literals? (parameters might just be done in intermediate lang)
+** How will lazy evaluation fit in?
