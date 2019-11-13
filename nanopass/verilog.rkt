@@ -5,12 +5,14 @@
 (define-language module-specification
   (terminals
    (identifier (identifier))
+   (symbol (symbol))
    (port-type (port-type))
    (size (size)))
   (Expr (e)
-          (mod identifier (e ...))
-          (input identifier size)
-          (output identifier size)))
+        symbol
+        (mod identifier (e0 ...) (e1 ...))
+        (input identifier size)
+        (output identifier size)))
 
 (define identifier? string?)
 (define port-type? string?)
@@ -24,12 +26,21 @@
 
 (define-pass output-module : module-specification (ast) -> * ()
   (definitions
-    (define (module-writer name ports)
+    (define (module-writer name operations ports)
       (new module-printer
+           [operations operations]
            [name name]
            [ports ports])))
   (pass : Expr (e) -> * ()
-        [(mod ,identifier (,[pass : ports] ...)) (display (send (module-writer identifier ports) print))]
+        [,symbol symbol]
+        [(mod ,identifier
+              (,[pass : operations] ...)
+              (,[pass : ports] ...))
+         (display
+          (send (module-writer
+                 identifier
+                 operations
+                 ports) print))]
         [(input ,identifier ,size) (list 'input identifier size)]
         [(output ,identifier ,size) (list 'output identifier size)]))
 
@@ -38,8 +49,8 @@
   (output-module
    (mod-parser
     '(mod "pair"
-          ((input "operation" (2 . 0))
-           (input "car" (8 . 0))
+          (new car cdr set_car set_cdr)
+          ((input "car" (8 . 0))
            (input "cdr" (8 . 0))
            (input "ref_in" (8 . 0))
            (output "ref_out" (8 . 0)))))))
