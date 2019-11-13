@@ -8,11 +8,19 @@
   (class base-verilog-printer%
     (super-new)
     (init-field name)
+    (init-field operations)
     (init-field ports)
 
+    (define operation-size
+      (-
+       (exact-ceiling
+        (log (length operations) 2))
+       1))
+
     (define default-inputs
-      '((input "clk" ())
-        (input "start" ())))
+      `((input "clk" ())
+        (input "start" ())
+        (input "operation" (,operation-size . 0))))
 
     (define default-outputs
       '((output "busy" ())))
