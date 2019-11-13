@@ -4,6 +4,10 @@
 *** Build block rams and garbage collectors for each type
 ** Collect all symbols
 *** Build symbol table
+** ...
+** Create thing(s) above module-specification
+*** type symbol -> size
+** Create module-specification
 * Ideas and Questions
 ** Can tighten up the sub-FSM calls?
 ** Easy to share states by hand, but how to automate?
@@ -11,4 +15,20 @@
 ** How will lazy evaluation fit in?
 * Tasks
 ** TODO design final nanopass language for generating verilog modules
+*** DONE module name
+*** DONE ports
+*** TODO operations
+**** pass a list of symbols
+**** use length to generate operation input
+**** use list to generate localparams
+*** TODO parameters
+**** Should this just be bookkeeping we just do? It's only being done for word size...
+*** TODO states
+*** TODO registers
+*** TODO instantiations
+*** TODO next state logic
+*** TODO output/register assignments
+**** Simple register to register
+**** Register to/from memory
+**** Allowed combinatorial operators
 ** TODO write out pair and environment modules in the new language
