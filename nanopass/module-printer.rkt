@@ -1,6 +1,6 @@
 #lang racket
 
-(require "verilog-printer.rkt" "port-printer.rkt")
+(require "verilog-printer.rkt" "port-printer.rkt" "operation-name-printer.rkt")
 
 (provide module-printer)
 
@@ -38,6 +38,9 @@
           (send port-writer print)))
        port-printers))
 
+    (define operation-printer
+      (new operation-name-printer [operations operations]))
+
     (define/override (do-print)
       (string-append
        "module "
@@ -46,5 +49,6 @@
        (string-join
         printed-ports
         ",\n")
-       "\n); "
+       "\n);\n"
+       (send operation-printer print)
        "\nendmodule\n"))))

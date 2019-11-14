@@ -17,13 +17,14 @@
 ** TODO design final nanopass language for generating verilog modules
 *** DONE module name
 *** DONE ports
-*** TODO operations
-**** pass a list of symbols
-**** use length to generate operation input
-**** use list to generate localparams
-*** TODO parameters
-**** Should this just be bookkeeping we just do? It's only being done for word size...
+*** DONE operations
+**** DONE pass a list of symbols
+**** DONE use length to generate operation input
+**** DONE use list to generate localparams
+**** TODO maybe operations should declare their own input/outputs?
 *** TODO states
+**** TODO state should have: label, assigns, next state logic
+**** TODO maybe this is wrapped as sub state machine per operation (see above)?
 *** TODO registers
 *** TODO instantiations
 *** TODO next state logic
@@ -31,4 +32,6 @@
 **** Simple register to register
 **** Register to/from memory
 **** Allowed combinatorial operators
+*** TODO parameters
+**** Should this just be bookkeeping we just do? It's only being done for word size...
 ** TODO write out pair and environment modules in the new language
