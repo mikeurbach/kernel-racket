@@ -66,14 +66,31 @@
           ;;   eof))))))
 
 ;; brainstorm:
-;; (mod pair
-;;      (op new
-;;          ((input car (8 . 0))
-;;           (input cdr (8 . 0))
-;;           (output pair_out (8 . 0)))
-;;          (new-start
-;;           (((reg next_addr) (op +) (reg next_addr) (const 1'd1))
-;;            ((reg pair_out) (op concat) (const 1'b1) (reg next_addr))
-;;            ((mem cars (reg next_addr)) (reg car))
-;;            ((mem cdrs (reg next_addr)) (reg cdr))))
-;;          init))
+;; (pair
+;;  ((mem cars (8 . 0) (255 . 0))
+;;   (mem cdrs (8 . 0) (255 . 0))
+;;   (reg next_addr (8 . 0) (const 1'd1)))
+;;  (cons ((input car (8 . 0))
+;;         (input cdr (8 . 0))
+;;         (output pair_out (8 . 0)))
+;;        ((store-cons
+;;          (((mem cars) (reg next_addr) (reg car))
+;;           ((mem cdrs) (reg next_addr) (reg cdr))
+;;           ((reg next_addr) (op +) (reg next_addr) (const 1'd1))
+;;           ((output ref_out) (op ,) (const 1'b1) (reg next_addr))))))
+;;  (car ((input pair_in (8 . 0))
+;;        (output pair_out (8 . 0)))
+;;       ((load-car
+;;         (((output pair_out) (mem cars) (input pair_in (7 . 0)))))))
+;;  (cdr ((input pair_in (8 . 0))
+;;        (output pair_out (8 . 0)))
+;;       ((load-cdr
+;;         (((output pair_out) (mem cdrs) (input pair_in (7 . 0)))))))
+;;  (set_car ((input pair_in (8 . 0))
+;;            (input car (8 . 0)))
+;;           ((store-car
+;;             (((mem cars) (input pair_in (7 . 0)) (input car))))))
+;;  (set_cdr ((input pair_in (8 . 0))
+;;            (input cdr (8 . 0)))
+;;           ((store-cdr
+;;             (((mem cdrs) (input pair_in (7 . 0)) (input cdr)))))))
