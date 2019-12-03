@@ -44,11 +44,11 @@
     [(out ,symbol ,size) (list 'out symbol size)])
   (memory-ref-pass : MemoryRef (mr) -> * ())
   (memory-pass : Memory (m) -> * ()
-    [(mem ,symbol ,(memory-ref-pass : memory-ref)) (list 'mem symbol memory-ref)])
+    [(mem ,symbol ,[memory-ref-pass : memory-ref]) (list 'mem symbol memory-ref)])
   (assign-target-pass : AssignTarget (at) -> * ())
   (assign-value-pass : AssignValue (av) -> * ())
   (assign-pass : Assign (a) -> * ()
-    [(,(assign-target-pass : assign-target) ,(assign-value-pass : assign-value)) (list assign-target assign-value)]))
+    [(,[assign-target-pass : assign-target] ,[assign-value-pass : assign-value]) (list assign-target assign-value)]))
 
 (define (size? p)
   (and (pair? p)
