@@ -2,11 +2,30 @@
 
 (provide verilog output-verilog)
 
+(define (size? e)
+  (and (pair? e)
+       (number? (car e))
+       (number? (cdr e))))
+
+(define unary-ops
+  (set '+ '- '! '~))
+
+(define (unary-op? e)
+  (set-member? unary-ops e))
+
+(define binary-ops
+  (set '+ '- '* '/ '% '< '<= '> '>= '&& '\|\| '== '!= '& '\| '^ '~^ '^~ '& '~& '~\| '<< '>>))
+
+(define (binary-op? e)
+  (set-member? binary-ops e))
+
 (define-language verilog
   (entry Assign)
   (terminals
    (symbol (symbol))
-   (size (size)))
+   (size (size))
+   (unary-op (unop))
+   (binary-op (binop)))
   (Register (register)
     (reg symbol)
     (reg symbol size))
@@ -29,8 +48,14 @@
     register
     memory
     input)
+  (UnaryOp (unary-op)
+    (op unop))
+  (BinaryOp (binary-op)
+    (op binop))
   (Assign (assign)
-    (assign-target assign-value)))
+    (assign-target assign-value)
+    (assign-target unary-op assign-value)
+    (assign-target binary-op assign-value1 assign-value2)))
 
 (define-pass output-verilog : verilog (ast) -> * ()
   (register-pass : Register (r) -> * ()
@@ -47,13 +72,14 @@
     [(mem ,symbol ,[memory-ref-pass : memory-ref]) (list 'mem symbol memory-ref)])
   (assign-target-pass : AssignTarget (at) -> * ())
   (assign-value-pass : AssignValue (av) -> * ())
+  (unary-op-pass : UnaryOp (uo) -> * ()
+    [(op ,unop) (list 'op unop)])
+  (binary-op-pass : BinaryOp (bo) -> * ()
+    [(op ,binop) (list 'op binop)])
   (assign-pass : Assign (a) -> * ()
-    [(,[assign-target-pass : assign-target] ,[assign-value-pass : assign-value]) (list assign-target assign-value)]))
-
-(define (size? p)
-  (and (pair? p)
-       (number? (car p))
-       (number? (cdr p))))
+    [(,[assign-target-pass : assign-target] ,[assign-value-pass : assign-value]) (list assign-target assign-value)]
+    [(,[assign-target-pass : assign-target] ,[unary-op-pass : unary-op] ,[assign-value-pass : assign-value]) (list assign-target unary-op assign-value)]
+    [(,[assign-target-pass : assign-target] ,[binary-op-pass : binary-op] ,[assign-value-pass : assign-value1] ,[assign-value-pass : assign-value2]) (list assign-target binary-op assign-value1 assign-value2)]))
 
 ;; brainstorm:
 ;; (pair
