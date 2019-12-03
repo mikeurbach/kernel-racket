@@ -8,24 +8,24 @@
    (symbol (symbol))
    (size (size)))
   (Register (register)
-            (reg symbol)
-            (reg symbol size))
+    (reg symbol)
+    (reg symbol size))
   (Input (input)
-         (in symbol)
-         (in symbol size))
+    (in symbol)
+    (in symbol size))
   (Output (output)
-         (out symbol)
-         (out symbol size))
+    (out symbol)
+    (out symbol size))
   (MemoryRef (memory-ref)
-             register
-             input)
+    register
+    input)
   (Memory (memory)
-          (mem symbol memory-ref))
+    (mem symbol memory-ref))
   (Expr (expr)
-        register
-        input
-        output
-        memory))
+    register
+    input
+    output
+    memory))
 
 (define-pass output-verilog : verilog (ast) -> * ()
   (register-pass : Register (r) -> * ()
