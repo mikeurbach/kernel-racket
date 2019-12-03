@@ -203,3 +203,18 @@
 (output-verilog
  (verilog-parser
   '((reg foo) (reg bar) (op \|) (const 8 b 11110000))))
+
+;; Case
+
+(output-verilog
+ (verilog-parser
+  '(case (in start)
+     ((const 1 b 1) opcase)
+     init)))
+
+(output-verilog
+ (verilog-parser
+  '(case (in op)
+     ((const 2 d 0) op1)
+     ((const 2 d 1) op2)
+     init)))
