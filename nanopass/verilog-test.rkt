@@ -4,7 +4,7 @@
 
 (define-parser verilog-parser verilog)
 
-;; Assigns
+;; Basic Assigns
 
 ;;;; Register Target, Register Value
 
@@ -167,3 +167,23 @@
 (output-verilog
  (verilog-parser
   '((out foo (7 . 0)) (in bar (7 . 0)))))
+
+;; Unary Operator Assigns
+
+(output-verilog
+ (verilog-parser
+  '((reg foo) (op -) (reg bar))))
+
+(output-verilog
+ (verilog-parser
+  '((reg foo) (op ~) (reg bar))))
+
+;; Binary Operator Assigns
+
+(output-verilog
+ (verilog-parser
+  '((reg foo) (op +) (reg bar) (reg baz))))
+
+(output-verilog
+ (verilog-parser
+  '((reg foo) (op &) (reg bar) (reg baz))))
