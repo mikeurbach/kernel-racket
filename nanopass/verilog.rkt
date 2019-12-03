@@ -63,11 +63,11 @@
     input)
   (Memory (memory)
     (mem symbol memory-ref))
-  (AssignTarget (assign-target)
+  (Target (target)
     register
     memory
     output)
-  (AssignValue (assign-value)
+  (Value (value)
     register
     constant
     memory
@@ -77,9 +77,9 @@
   (BinaryOp (binary-op)
     (op binop))
   (Assign (assign)
-    (assign-target assign-value)
-    (assign-target unary-op assign-value)
-    (assign-target assign-value1 binary-op assign-value2)))
+    (target value)
+    (target unary-op value)
+    (target value1 binary-op value2)))
 
 (define-pass output-verilog : verilog (ast) -> * ()
   (register-pass : Register (r) -> * ()
@@ -96,19 +96,19 @@
   (memory-ref-pass : MemoryRef (mr) -> * ())
   (memory-pass : Memory (m) -> * ()
     [(mem ,symbol ,[memory-ref-pass : memory-ref]) (list 'mem symbol memory-ref)])
-  (assign-target-pass : AssignTarget (at) -> * ())
-  (assign-value-pass : AssignValue (av) -> * ())
+  (target-pass : Target (t) -> * ())
+  (value-pass : Value (v) -> * ())
   (unary-op-pass : UnaryOp (uo) -> * ()
     [(op ,unop) (list 'op unop)])
   (binary-op-pass : BinaryOp (bo) -> * ()
     [(op ,binop) (list 'op binop)])
   (assign-pass : Assign (a) -> * ()
-    [(,[assign-target-pass : assign-target] ,[assign-value-pass : assign-value])
-     (list assign-target assign-value)]
-    [(,[assign-target-pass : assign-target] ,[unary-op-pass : unary-op] ,[assign-value-pass : assign-value])
-     (list assign-target unary-op assign-value)]
-    [(,[assign-target-pass : assign-target] ,[assign-value-pass : assign-value1] ,[binary-op-pass : binary-op] ,[assign-value-pass : assign-value2])
-     (list assign-target binary-op assign-value1 assign-value2)]))
+    [(,[target-pass : target] ,[value-pass : value])
+     (list target value)]
+    [(,[target-pass : target] ,[unary-op-pass : unary-op] ,[value-pass : value])
+     (list target unary-op value)]
+    [(,[target-pass : target] ,[value-pass : value1] ,[binary-op-pass : binary-op] ,[value-pass : value2])
+     (list target value1 binary-op value2)]))
 
 ;; brainstorm:
 ;; (pair
