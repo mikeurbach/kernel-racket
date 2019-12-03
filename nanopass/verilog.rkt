@@ -1,69 +1,51 @@
 #lang nanopass
 
-(require "module-printer.rkt")
+(provide verilog output-verilog)
 
-(define-language module-specification
+(define-language verilog
+  (entry Expr)
   (terminals
-   (identifier (identifier))
    (symbol (symbol))
-   (port-type (port-type))
    (size (size)))
-  (Expr (e)
-        symbol
-        (mod identifier (e0 ...) (e1 ...))
-        ;; (symbol (e0 ...) e1)
-        (input identifier size)
-        (output identifier size)))
+  (Register (register)
+            (reg symbol)
+            (reg symbol size))
+  (Input (input)
+         (in symbol)
+         (in symbol size))
+  (Output (output)
+         (out symbol)
+         (out symbol size))
+  (MemoryRef (memory-ref)
+             register
+             input)
+  (Memory (memory)
+          (mem symbol memory-ref))
+  (Expr (expr)
+        register
+        input
+        output
+        memory))
 
-(define identifier? string?)
-(define port-type? string?)
-(define (size? e)
-  (or
-   (empty? e)
-   (and
-    (pair? e)
-    (number? (car e))
-    (number? (cdr e)))))
+(define-pass output-verilog : verilog (ast) -> * ()
+  (register-pass : Register (r) -> * ()
+    [(reg ,symbol) (list 'reg symbol)]
+    [(reg ,symbol ,size) (list 'reg symbol size)])
+  (input-pass : Input (i) -> * ()
+    [(in ,symbol) (list 'in symbol)]
+    [(in ,symbol ,size) (list 'in symbol size)])
+  (output-pass : Output (i) -> * ()
+    [(out ,symbol) (list 'out symbol)]
+    [(out ,symbol ,size) (list 'out symbol size)])
+  (memory-ref-pass : MemoryRef (mr) -> * ())
+  (memory-pass : Memory (m) -> * ()
+    [(mem ,symbol ,(memory-ref-pass : memory-ref)) (list 'mem symbol memory-ref)])
+  (expr-pass : Expr (e) -> * ()))
 
-(define-pass output-module : module-specification (ast) -> * ()
-  (definitions
-    (define (module-writer name operations ports)
-      (new module-printer
-           [operations operations]
-           [name name]
-           [ports ports])))
-           ;; [states states])))
-  (pass : Expr (e) -> * ()
-        [,symbol symbol]
-        [(mod ,identifier
-              (,[pass : operations] ...)
-              (,[pass : ports] ...))
-              ;; (,[pass : states] ...))
-         (display
-          (send (module-writer
-                 identifier
-                 operations
-                 ports) print))]
-        ;; [(,symbol (,[pass : assigns] ...) ,[pass : next_state]) (list symbol assigns next_state)]
-        [(input ,identifier ,size) (list 'input identifier size)]
-        [(output ,identifier ,size) (list 'output identifier size)]))
-
-(begin
-  (define-parser mod-parser module-specification)
-  (output-module
-   (mod-parser
-    '(mod "pair"
-          (new car cdr set_car set_cdr)
-          ((input "car" (8 . 0))
-           (input "cdr" (8 . 0))
-           (input "ref_in" (8 . 0))
-           (output "ref_out" (8 . 0)))))))
-          ;; ((start
-          ;;   (a b c)
-          ;;   done)
-          ;;  (done
-          ;;   ()
-          ;;   eof))))))
+(define (size? p)
+  (and (pair? p)
+       (number? (car p))
+       (number? (cdr p))))
 
 ;; brainstorm:
 ;; (pair
