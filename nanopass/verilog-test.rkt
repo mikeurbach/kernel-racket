@@ -4,52 +4,166 @@
 
 (define-parser verilog-parser verilog)
 
-;; Primitives
+;; Assigns
 
-;;;; Registers
-
-(output-verilog
- (verilog-parser
-  '(reg foo)))
+;;;; Register Target, Register Value
 
 (output-verilog
  (verilog-parser
-  '(reg foo (7 . 0))))
-
-;;;; Inputs
+  '((reg foo) (reg bar))))
 
 (output-verilog
  (verilog-parser
-  '(in foo)))
+  '((reg foo) (reg bar (7 . 0)))))
 
 (output-verilog
  (verilog-parser
-  '(in foo (7 . 0))))
-
-;;;; Outputs
+  '((reg foo (7 . 0)) (reg bar))))
 
 (output-verilog
  (verilog-parser
-  '(out foo)))
+  '((reg foo (7 . 0)) (reg bar (7 . 0)))))
+
+;;;; Register Target, Memory Value
 
 (output-verilog
  (verilog-parser
-  '(out foo (7 . 0))))
-
-;;;; Memories
+  '((reg foo) (mem ram (reg addr)))))
 
 (output-verilog
  (verilog-parser
-  '(mem cars (reg next-reg))))
+  '((reg foo) (mem ram (reg addr (7 . 0))))))
 
 (output-verilog
  (verilog-parser
-  '(mem cars (reg next-reg (7 . 0)))))
+  '((reg foo (7 . 0)) (mem ram (reg addr)))))
 
 (output-verilog
  (verilog-parser
-  '(mem cars (in car))))
+  '((reg foo (7 . 0)) (mem ram (reg addr (7 . 0))))))
+
+;;;; Register Target, Input Value
 
 (output-verilog
  (verilog-parser
-  '(mem cars (in car (7 . 0)))))
+  '((reg foo) (in bar))))
+
+(output-verilog
+ (verilog-parser
+  '((reg foo) (in bar (7 . 0)))))
+
+(output-verilog
+ (verilog-parser
+  '((reg foo (7 . 0)) (in bar))))
+
+(output-verilog
+ (verilog-parser
+  '((reg foo (7 . 0)) (in bar (7 . 0)))))
+
+;;;; Memory Target, Register Value
+
+(output-verilog
+ (verilog-parser
+  '((mem ram (reg foo)) (reg bar))))
+
+(output-verilog
+ (verilog-parser
+  '((mem ram (reg foo)) (reg bar (7 . 0)))))
+
+(output-verilog
+ (verilog-parser
+  '((mem ram (reg foo (7 . 0))) (reg bar))))
+
+(output-verilog
+ (verilog-parser
+  '((mem ram (reg foo (7 . 0))) (reg bar (7 . 0)))))
+
+;;;; Memory Target, Memory Value
+
+(output-verilog
+ (verilog-parser
+  '((mem ram (reg foo)) (mem ram (reg addr)))))
+
+(output-verilog
+ (verilog-parser
+  '((mem ram (reg foo)) (mem ram (reg addr (7 . 0))))))
+
+(output-verilog
+ (verilog-parser
+  '((mem ram (reg foo (7 . 0))) (mem ram (reg addr)))))
+
+(output-verilog
+ (verilog-parser
+  '((mem ram (reg foo (7 . 0))) (mem ram (reg addr (7 . 0))))))
+
+;;;; Memory Target, Input Value
+
+(output-verilog
+ (verilog-parser
+  '((mem ram (reg foo)) (in bar))))
+
+(output-verilog
+ (verilog-parser
+  '((mem ram (reg foo)) (in bar (7 . 0)))))
+
+(output-verilog
+ (verilog-parser
+  '((mem ram (reg foo (7 . 0))) (in bar))))
+
+(output-verilog
+ (verilog-parser
+  '((mem ram (reg foo (7 . 0))) (in bar (7 . 0)))))
+
+;;;; Output Target, Register Value
+
+(output-verilog
+ (verilog-parser
+  '((out foo) (reg bar))))
+
+(output-verilog
+ (verilog-parser
+  '((out foo) (reg bar (7 . 0)))))
+
+(output-verilog
+ (verilog-parser
+  '((out foo (7 . 0)) (reg bar))))
+
+(output-verilog
+ (verilog-parser
+  '((out foo (7 . 0)) (reg bar (7 . 0)))))
+
+;;;; Output Target, Memory Value
+
+(output-verilog
+ (verilog-parser
+  '((out foo) (mem ram (reg addr)))))
+
+(output-verilog
+ (verilog-parser
+  '((out foo) (mem ram (reg addr (7 . 0))))))
+
+(output-verilog
+ (verilog-parser
+  '((out foo (7 . 0)) (mem ram (reg addr)))))
+
+(output-verilog
+ (verilog-parser
+  '((out foo (7 . 0)) (mem ram (reg addr (7 . 0))))))
+
+;;;; Output Target, Input Value
+
+(output-verilog
+ (verilog-parser
+  '((out foo) (in bar))))
+
+(output-verilog
+ (verilog-parser
+  '((out foo) (in bar (7 . 0)))))
+
+(output-verilog
+ (verilog-parser
+  '((out foo (7 . 0)) (in bar))))
+
+(output-verilog
+ (verilog-parser
+  '((out foo (7 . 0)) (in bar (7 . 0)))))

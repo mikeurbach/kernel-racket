@@ -3,7 +3,7 @@
 (provide verilog output-verilog)
 
 (define-language verilog
-  (entry Expr)
+  (entry Assign)
   (terminals
    (symbol (symbol))
    (size (size)))
@@ -21,11 +21,16 @@
     input)
   (Memory (memory)
     (mem symbol memory-ref))
-  (Expr (expr)
+  (AssignTarget (assign-target)
     register
-    input
-    output
-    memory))
+    memory
+    output)
+  (AssignValue (assign-value)
+    register
+    memory
+    input)
+  (Assign (assign)
+    (assign-target assign-value)))
 
 (define-pass output-verilog : verilog (ast) -> * ()
   (register-pass : Register (r) -> * ()
@@ -40,7 +45,10 @@
   (memory-ref-pass : MemoryRef (mr) -> * ())
   (memory-pass : Memory (m) -> * ()
     [(mem ,symbol ,(memory-ref-pass : memory-ref)) (list 'mem symbol memory-ref)])
-  (expr-pass : Expr (e) -> * ()))
+  (assign-target-pass : AssignTarget (at) -> * ())
+  (assign-value-pass : AssignValue (av) -> * ())
+  (assign-pass : Assign (a) -> * ()
+    [(,(assign-target-pass : assign-target) ,(assign-value-pass : assign-value)) (list assign-target assign-value)]))
 
 (define (size? p)
   (and (pair? p)
