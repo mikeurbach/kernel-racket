@@ -78,6 +78,10 @@
  (verilog-parser
   '((mem ram (reg foo (7 . 0))) (reg bar (7 . 0)))))
 
+(output-verilog
+ (verilog-parser
+  '((mem ram (const 8 d 23)) (reg bar))))
+
 ;;;; Memory Target, Memory Value
 
 (output-verilog
@@ -186,4 +190,16 @@
 
 (output-verilog
  (verilog-parser
+  '((reg foo) (op +) (reg bar) (const 8 d 1))))
+
+(output-verilog
+ (verilog-parser
   '((reg foo) (op &) (reg bar) (reg baz))))
+
+(output-verilog
+ (verilog-parser
+  '((reg foo) (op &) (reg bar) (const 8 h ff))))
+
+(output-verilog
+ (verilog-parser
+  '((reg foo) (op \|) (reg bar) (const 8 b 11110000))))

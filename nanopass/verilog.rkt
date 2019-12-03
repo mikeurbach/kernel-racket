@@ -7,6 +7,23 @@
        (number? (car e))
        (number? (cdr e))))
 
+(define bitwidth? number?)
+
+(define baseidents
+  (set 'b 'o 'h 'd))
+
+(define (baseident? e)
+  (set-member? baseidents e))
+
+(define hexchars
+  (set #\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9 #\a #\b #\c #\d #\e #\f))
+
+(define (literal? e)
+  (or (number? e)
+      (and (symbol? e)
+           (andmap (lambda (c) (set-member? hexchars c))
+                   (string->list (symbol->string e))))))
+
 (define unary-ops
   (set '+ '- '! '~))
 
@@ -24,11 +41,16 @@
   (terminals
    (symbol (symbol))
    (size (size))
+   (bitwidth (bitwidth))
+   (baseident (baseident))
+   (literal (literal))
    (unary-op (unop))
    (binary-op (binop)))
   (Register (register)
     (reg symbol)
     (reg symbol size))
+  (Constant (constant)
+    (const bitwidth baseident literal))
   (Input (input)
     (in symbol)
     (in symbol size))
@@ -37,6 +59,7 @@
     (out symbol size))
   (MemoryRef (memory-ref)
     register
+    constant
     input)
   (Memory (memory)
     (mem symbol memory-ref))
@@ -46,6 +69,7 @@
     output)
   (AssignValue (assign-value)
     register
+    constant
     memory
     input)
   (UnaryOp (unary-op)
@@ -61,6 +85,8 @@
   (register-pass : Register (r) -> * ()
     [(reg ,symbol) (list 'reg symbol)]
     [(reg ,symbol ,size) (list 'reg symbol size)])
+  (constant-pass : Constant (c) -> * ()
+    [(const ,bitwidth ,baseident ,literal) (list bitwidth baseident literal)])
   (input-pass : Input (i) -> * ()
     [(in ,symbol) (list 'in symbol)]
     [(in ,symbol ,size) (list 'in symbol size)])
