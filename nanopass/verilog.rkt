@@ -37,7 +37,7 @@
   (set-member? binary-ops e))
 
 (define-language verilog
-  (entry Assign)
+  (entry Entry)
   (terminals
    (symbol (symbol))
    (size (size))
@@ -79,7 +79,12 @@
   (Assign (assign)
     (target value)
     (target unary-op value)
-    (target value1 binary-op value2)))
+    (target value1 binary-op value2))
+  (CaseStatement (case-statement)
+    (case value0 (value1 symbol1) ... symbol0))
+  (Entry (entry)
+    assign
+    case-statement))
 
 (define-pass output-verilog : verilog (ast) -> * ()
   (register-pass : Register (r) -> * ()
@@ -108,7 +113,11 @@
     [(,[target-pass : target] ,[unary-op-pass : unary-op] ,[value-pass : value])
      (list target unary-op value)]
     [(,[target-pass : target] ,[value-pass : value1] ,[binary-op-pass : binary-op] ,[value-pass : value2])
-     (list target value1 binary-op value2)]))
+     (list target value1 binary-op value2)])
+  (case-statement-pass : CaseStatement (cs) -> * ()
+    [(case ,[value-pass : value0] (,[value-pass : value1] ,symbol1) ... ,symbol0)
+     (list 'case value0 (map cons value1 symbol1) symbol0)])
+  (entry-pass : Entry (e) -> * ()))
 
 ;; brainstorm:
 ;; (pair
