@@ -186,20 +186,20 @@
 
 (output-verilog
  (verilog-parser
-  '((reg foo) (op +) (reg bar) (reg baz))))
+  '((reg foo) (reg bar) (op +) (reg baz))))
 
 (output-verilog
  (verilog-parser
-  '((reg foo) (op +) (reg bar) (const 8 d 1))))
+  '((reg foo) (reg bar) (op +) (const 8 d 1))))
 
 (output-verilog
  (verilog-parser
-  '((reg foo) (op &) (reg bar) (reg baz))))
+  '((reg foo) (reg bar) (op &) (reg baz))))
 
 (output-verilog
  (verilog-parser
-  '((reg foo) (op &) (reg bar) (const 8 h ff))))
+  '((reg foo) (reg bar) (op &) (const 8 h ff))))
 
 (output-verilog
  (verilog-parser
-  '((reg foo) (op \|) (reg bar) (const 8 b 11110000))))
+  '((reg foo) (reg bar) (op \|) (const 8 b 11110000))))

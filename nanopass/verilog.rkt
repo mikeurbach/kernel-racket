@@ -79,7 +79,7 @@
   (Assign (assign)
     (assign-target assign-value)
     (assign-target unary-op assign-value)
-    (assign-target binary-op assign-value1 assign-value2)))
+    (assign-target assign-value1 binary-op assign-value2)))
 
 (define-pass output-verilog : verilog (ast) -> * ()
   (register-pass : Register (r) -> * ()
@@ -103,9 +103,12 @@
   (binary-op-pass : BinaryOp (bo) -> * ()
     [(op ,binop) (list 'op binop)])
   (assign-pass : Assign (a) -> * ()
-    [(,[assign-target-pass : assign-target] ,[assign-value-pass : assign-value]) (list assign-target assign-value)]
-    [(,[assign-target-pass : assign-target] ,[unary-op-pass : unary-op] ,[assign-value-pass : assign-value]) (list assign-target unary-op assign-value)]
-    [(,[assign-target-pass : assign-target] ,[binary-op-pass : binary-op] ,[assign-value-pass : assign-value1] ,[assign-value-pass : assign-value2]) (list assign-target binary-op assign-value1 assign-value2)]))
+    [(,[assign-target-pass : assign-target] ,[assign-value-pass : assign-value])
+     (list assign-target assign-value)]
+    [(,[assign-target-pass : assign-target] ,[unary-op-pass : unary-op] ,[assign-value-pass : assign-value])
+     (list assign-target unary-op assign-value)]
+    [(,[assign-target-pass : assign-target] ,[assign-value-pass : assign-value1] ,[binary-op-pass : binary-op] ,[assign-value-pass : assign-value2])
+     (list assign-target binary-op assign-value1 assign-value2)]))
 
 ;; brainstorm:
 ;; (pair
