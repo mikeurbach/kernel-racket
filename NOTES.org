@@ -13,6 +13,7 @@
 ** Easy to share states by hand, but how to automate?
 ** How to remove hard-coded bitwidth in literals? (parameters might just be done in intermediate lang)
 ** How will lazy evaluation fit in?
+** Can operations share ports? (maybe do this as an optimization later)
 * Tasks
 ** TODO design final nanopass language for generating verilog modules
 *** DONE module name
