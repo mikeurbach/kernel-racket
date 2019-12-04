@@ -14,7 +14,8 @@
     ()
     ((op1
       ()
-      (((((reg foo) (reg bar)))
+      ((s1
+        (((reg foo) (reg bar)))
         init)))))))
 
 (output-rtl
@@ -23,7 +24,8 @@
     ()
     ((op1
       ()
-      (((((reg foo) (reg bar (7 . 0))))
+      ((s1
+        (((reg foo) (reg bar (7 . 0))))
         init)))))))
 
 (output-rtl
@@ -32,7 +34,8 @@
     ()
     ((op1
       ()
-      (((((reg foo (7 . 0)) (reg bar)))
+      ((s1
+        (((reg foo (7 . 0)) (reg bar)))
         init)))))))
 
 (output-rtl
@@ -41,7 +44,8 @@
     ()
     ((op1
       ()
-      (((((reg foo (7 . 0)) (reg bar (7 . 0))))
+      ((s1
+        (((reg foo (7 . 0)) (reg bar (7 . 0))))
         init)))))))
 
 ;;;; Register Target, Memory Value
@@ -52,7 +56,8 @@
     ()
     ((op1
       ()
-      (((((reg foo) (mem ram (reg addr))))
+      ((s1
+        (((reg foo) (mem ram (reg addr))))
         init)))))))
 
 (output-rtl
@@ -61,7 +66,8 @@
     ()
     ((op1
       ()
-      (((((reg foo) (mem ram (reg addr (7 . 0)))))
+      ((s1
+        (((reg foo) (mem ram (reg addr (7 . 0)))))
         init)))))))
 
 (output-rtl
@@ -70,7 +76,8 @@
     ()
     ((op1
       ()
-      (((((reg foo (7 . 0)) (mem ram (reg addr))))
+      ((s1
+        (((reg foo (7 . 0)) (mem ram (reg addr))))
         init)))))))
 
 (output-rtl
@@ -79,7 +86,8 @@
     ()
     ((op1
       ()
-      (((((reg foo (7 . 0)) (mem ram (reg addr (7 . 0)))))
+      ((s1
+        (((reg foo (7 . 0)) (mem ram (reg addr (7 . 0)))))
         init)))))))
 
 ;;;; Register Target, Input Value
@@ -90,7 +98,8 @@
     ()
     ((op1
       ()
-      (((((reg foo) (in bar)))
+      ((s1
+        (((reg foo) (in bar)))
         init)))))))
 
 (output-rtl
@@ -99,7 +108,8 @@
     ()
     ((op1
       ()
-      (((((reg foo) (in bar (7 . 0))))
+      ((s1
+        (((reg foo) (in bar (7 . 0))))
         init)))))))
 
 (output-rtl
@@ -108,7 +118,8 @@
     ()
     ((op1
       ()
-      (((((reg foo (7 . 0)) (in bar)))
+      ((s1
+       (((reg foo (7 . 0)) (in bar)))
         init)))))))
 
 (output-rtl
@@ -117,7 +128,8 @@
     ()
     ((op1
       ()
-      (((((reg foo (7 . 0)) (in bar (7 . 0))))
+      ((s1
+        (((reg foo (7 . 0)) (in bar (7 . 0))))
         init)))))))
 
 ;;;; Memory Target, Register Value
@@ -128,7 +140,8 @@
     ()
     ((op1
       ()
-      (((((mem ram (reg foo)) (reg bar)))
+      ((s1
+        (((mem ram (reg foo)) (reg bar)))
         init)))))))
 
 (output-rtl
@@ -137,7 +150,8 @@
     ()
     ((op1
       ()
-      (((((mem ram (reg foo)) (reg bar (7 . 0))))
+      ((s1
+        (((mem ram (reg foo)) (reg bar (7 . 0))))
         init)))))))
 
 (output-rtl
@@ -146,7 +160,8 @@
     ()
     ((op1
       ()
-      (((((mem ram (reg foo (7 . 0))) (reg bar)))
+      ((s1
+        (((mem ram (reg foo (7 . 0))) (reg bar)))
         init)))))))
 
 (output-rtl
@@ -155,7 +170,8 @@
     ()
     ((op1
       ()
-      (((((mem ram (reg foo (7 . 0))) (reg bar (7 . 0))))
+      ((s1
+        (((mem ram (reg foo (7 . 0))) (reg bar (7 . 0))))
         init)))))))
 
 (output-rtl
@@ -164,7 +180,8 @@
     ()
     ((op1
       ()
-      (((((mem ram (const 8 d 23)) (reg bar)))
+      ((s1
+        (((mem ram (const 8 d 23)) (reg bar)))
         init)))))))
 
 ;;;; Memory Target, Memory Value
@@ -175,7 +192,8 @@
     ()
     ((op1
       ()
-      (((((mem ram (reg foo)) (mem ram (reg addr))))
+      ((s1
+        (((mem ram (reg foo)) (mem ram (reg addr))))
         init)))))))
 
 (output-rtl
@@ -184,7 +202,8 @@
     ()
     ((op1
       ()
-      (((((mem ram (reg foo)) (mem ram (reg addr (7 . 0)))))
+      ((s1
+        (((mem ram (reg foo)) (mem ram (reg addr (7 . 0)))))
         init)))))))
 
 (output-rtl
@@ -193,7 +212,8 @@
     ()
     ((op1
       ()
-      (((((mem ram (reg foo (7 . 0))) (mem ram (reg addr))))
+      ((s1
+        (((mem ram (reg foo (7 . 0))) (mem ram (reg addr))))
         init)))))))
 
 (output-rtl
@@ -202,7 +222,8 @@
     ()
     ((op1
       ()
-      (((((mem ram (reg foo (7 . 0))) (mem ram (reg addr (7 . 0)))))
+      ((s1
+        (((mem ram (reg foo (7 . 0))) (mem ram (reg addr (7 . 0)))))
         init)))))))
 
 ;;;; Memory Target, Input Value
@@ -213,7 +234,8 @@
     ()
     ((op1
       ()
-      (((((mem ram (reg foo)) (in bar)))
+      ((s1
+        (((mem ram (reg foo)) (in bar)))
         init)))))))
 
 (output-rtl
@@ -222,7 +244,8 @@
     ()
     ((op1
       ()
-      (((((mem ram (reg foo)) (in bar (7 . 0))))
+      ((s1
+        (((mem ram (reg foo)) (in bar (7 . 0))))
         init)))))))
 
 (output-rtl
@@ -231,7 +254,8 @@
     ()
     ((op1
       ()
-      (((((mem ram (reg foo (7 . 0))) (in bar)))
+      ((s1
+        (((mem ram (reg foo (7 . 0))) (in bar)))
         init)))))))
 
 (output-rtl
@@ -240,7 +264,8 @@
     ()
     ((op1
       ()
-      (((((mem ram (reg foo (7 . 0))) (in bar (7 . 0))))
+      ((s1
+        (((mem ram (reg foo (7 . 0))) (in bar (7 . 0))))
         init)))))))
 
 ;;;; Output Target, Register Value
@@ -251,7 +276,8 @@
     ()
     ((op1
       ()
-      (((((out foo) (reg bar)))
+      ((s1
+        (((out foo) (reg bar)))
         init)))))))
 
 (output-rtl
@@ -260,7 +286,8 @@
     ()
     ((op1
       ()
-      (((((out foo) (reg bar (7 . 0))))
+      ((s1
+        (((out foo) (reg bar (7 . 0))))
         init)))))))
 
 (output-rtl
@@ -269,7 +296,8 @@
     ()
     ((op1
       ()
-      (((((out foo (7 . 0)) (reg bar)))
+      ((s1
+        (((out foo (7 . 0)) (reg bar)))
         init)))))))
 
 (output-rtl
@@ -278,7 +306,8 @@
     ()
     ((op1
       ()
-      (((((out foo (7 . 0)) (reg bar (7 . 0))))
+      ((s1
+        (((out foo (7 . 0)) (reg bar (7 . 0))))
         init)))))))
 
 ;;;; Output Target, Memory Value
@@ -289,7 +318,8 @@
     ()
     ((op1
       ()
-      (((((out foo) (mem ram (reg addr))))
+      ((s1
+        (((out foo) (mem ram (reg addr))))
         init)))))))
 
 (output-rtl
@@ -298,7 +328,8 @@
     ()
     ((op1
       ()
-      (((((out foo) (mem ram (reg addr (7 . 0)))))
+      ((s1
+        (((out foo) (mem ram (reg addr (7 . 0)))))
         init)))))))
 
 (output-rtl
@@ -307,7 +338,8 @@
     ()
     ((op1
       ()
-      (((((out foo (7 . 0)) (mem ram (reg addr))))
+      ((s1
+        (((out foo (7 . 0)) (mem ram (reg addr))))
         init)))))))
 
 (output-rtl
@@ -316,7 +348,8 @@
     ()
     ((op1
       ()
-      (((((out foo (7 . 0)) (mem ram (reg addr (7 . 0)))))
+      ((s1
+        (((out foo (7 . 0)) (mem ram (reg addr (7 . 0)))))
         init)))))))
 
 ;;;; Output Target, Input Value
@@ -327,7 +360,8 @@
     ()
     ((op1
       ()
-      (((((out foo) (in bar)))
+      ((s1
+        (((out foo) (in bar)))
         init)))))))
 
 (output-rtl
@@ -336,7 +370,8 @@
     ()
     ((op1
       ()
-      (((((out foo) (in bar (7 . 0))))
+      ((s1
+        (((out foo) (in bar (7 . 0))))
         init)))))))
 
 (output-rtl
@@ -345,7 +380,8 @@
     ()
     ((op1
       ()
-      (((((out foo (7 . 0)) (in bar)))
+      ((s1
+        (((out foo (7 . 0)) (in bar)))
         init)))))))
 
 (output-rtl
@@ -354,7 +390,8 @@
     ()
     ((op1
       ()
-      (((((out foo (7 . 0)) (in bar (7 . 0))))
+      ((s1
+        (((out foo (7 . 0)) (in bar (7 . 0))))
         init)))))))
 
 ;; Unary Operator Assigns
@@ -365,7 +402,8 @@
     ()
     ((op1
       ()
-      (((((reg foo) (op -) (reg bar)))
+      ((s1
+        (((reg foo) (op -) (reg bar)))
         init)))))))
 
 (output-rtl
@@ -374,7 +412,8 @@
     ()
     ((op1
       ()
-      (((((reg foo) (op ~) (reg bar)))
+      ((s1
+        (((reg foo) (op ~) (reg bar)))
         init)))))))
 
 ;; Binary Operator Assigns
@@ -385,7 +424,8 @@
     ()
     ((op1
       ()
-      (((((reg foo) (reg bar) (op +) (reg baz)))
+      ((s1
+        (((reg foo) (reg bar) (op +) (reg baz)))
         init)))))))
 
 (output-rtl
@@ -394,7 +434,8 @@
     ()
     ((op1
       ()
-      (((((reg foo) (reg bar) (op +) (const 8 d 1)))
+      ((s1
+        (((reg foo) (reg bar) (op +) (const 8 d 1)))
         init)))))))
 
 (output-rtl
@@ -403,7 +444,8 @@
     ()
     ((op1
       ()
-      (((((reg foo) (reg bar) (op &) (reg baz)))
+      ((s1
+        (((reg foo) (reg bar) (op &) (reg baz)))
         init)))))))
 
 (output-rtl
@@ -412,7 +454,8 @@
     ()
     ((op1
       ()
-      (((((reg foo) (reg bar) (op &) (const 8 h ff)))
+      ((s1
+        (((reg foo) (reg bar) (op &) (const 8 h ff)))
         init)))))))
 
 (output-rtl
@@ -421,7 +464,8 @@
     ()
     ((op1
       ()
-      (((((reg foo) (reg bar) (op \|) (const 8 b 11110000)))
+      ((s1
+        (((reg foo) (reg bar) (op \|) (const 8 b 11110000)))
         init)))))))
 
 ;; Next State
@@ -432,7 +476,8 @@
     ()
     ((op1
       ()
-      ((()
+      ((s1
+        ()
         init)))))))
 
 (output-rtl
@@ -441,7 +486,8 @@
     ()
     ((op1
       ()
-      ((()
+      ((s1
+        ()
         (case (in start)
           ((const 1 b 1) opcase)
           init))))))))
@@ -452,7 +498,8 @@
     ()
     ((op1
       ()
-      ((()
+      ((s1
+        ()
         (case (in op)
           ((const 2 d 0) op1)
           ((const 2 d 1) op2)
@@ -470,7 +517,8 @@
       ((in car (7 . 0))
        (in cdr (7 . 0))
        (out pair (7 . 0)))
-      (((((mem cars (reg addr)) (in car))
+      ((new
+        (((mem cars (reg addr)) (in car))
          ((mem cdrs (reg addr)) (in cdr))
          ((reg addr) (reg addr) (op +) (const 1 d 1))
          ((out pair) (const 1 b 1) (op \,) (reg addr)))
