@@ -37,7 +37,7 @@
   (set-member? binary-ops e))
 
 (define-language verilog
-  (entry Operation)
+  (entry Module)
   (terminals
    (symbol (symbol))
    (size (size))
@@ -66,6 +66,11 @@
     input)
   (Memory (memory)
     (mem symbol memory-ref))
+  (MemoryDecl (memory-decl)
+    (mem symbol size0 size1))
+  (Declaration (declaration)
+    register
+    memory-decl)
   (Target (target)
     register
     memory
@@ -91,7 +96,9 @@
   (State (state)
     ((assign ...) next-state))
   (Operation (operation)
-    (symbol (port ...) (state ...))))
+    (symbol (port ...) (state ...)))
+  (Module (module)
+    (symbol (declaration ...) (operation ...))))
 
 (define-pass output-verilog : verilog (ast) -> * ()
   (register-pass : Register (r) -> * ()
@@ -109,6 +116,9 @@
   (memory-ref-pass : MemoryRef (mr) -> * ())
   (memory-pass : Memory (m) -> * ()
     [(mem ,symbol ,[memory-ref-pass : memory-ref]) (list 'mem symbol memory-ref)])
+  (memory-decl-pass : MemoryDecl (md) -> * ()
+    [(mem ,symbol ,size0 ,size1) (list 'mem symbol size0 size1)])
+  (declaration-pass : Declaration (d) -> * ())
   (target-pass : Target (t) -> * ())
   (value-pass : Value (v) -> * ())
   (unary-op-pass : UnaryOp (uo) -> * ()
@@ -132,7 +142,10 @@
      (list assign next-state)])
   (operation-pass : Operation (o) -> * ()
     [(,symbol (,[port-pass : port] ...) (,[state-pass : state] ...))
-     (list symbol port state)]))
+     (list symbol port state)])
+  (module-pass : Module (mo) -> * ()
+    [(,symbol (,[declaration-pass : declaration] ...) (,[operation-pass : operation] ...))
+     (list symbol declaration operation)]))
 
 ;; brainstorm:
 ;; (pair
