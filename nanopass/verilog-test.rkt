@@ -204,7 +204,11 @@
  (verilog-parser
   '((reg foo) (reg bar) (op \|) (const 8 b 11110000))))
 
-;; Case
+;; Next State
+
+(output-verilog
+ (verilog-parser
+  'init))
 
 (output-verilog
  (verilog-parser

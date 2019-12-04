@@ -82,9 +82,12 @@
     (target value1 binary-op value2))
   (CaseStatement (case-statement)
     (case value0 (value1 symbol1) ... symbol0))
+  (NextState (next-state)
+    symbol
+    case-statement)
   (Entry (entry)
     assign
-    case-statement))
+    next-state))
 
 (define-pass output-verilog : verilog (ast) -> * ()
   (register-pass : Register (r) -> * ()
@@ -117,6 +120,8 @@
   (case-statement-pass : CaseStatement (cs) -> * ()
     [(case ,[value-pass : value0] (,[value-pass : value1] ,symbol1) ... ,symbol0)
      (list 'case value0 (map cons value1 symbol1) symbol0)])
+  (next-state-pass : NextState (ns) -> * ()
+    [,symbol symbol])
   (entry-pass : Entry (e) -> * ()))
 
 ;; brainstorm:
