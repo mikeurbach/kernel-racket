@@ -86,7 +86,7 @@
     symbol
     case-statement)
   (State (state)
-    (assign ... next-state)))
+    ((assign ...) next-state)))
 
 (define-pass output-verilog : verilog (ast) -> * ()
   (register-pass : Register (r) -> * ()
@@ -122,7 +122,7 @@
   (next-state-pass : NextState (ns) -> * ()
     [,symbol symbol])
   (state-pass : State (s) -> * ()
-    [(,[assign-pass : assign] ... ,[next-state-pass : next-state])
+    [((,[assign-pass : assign] ...) ,[next-state-pass : next-state])
      (list assign next-state)]))
 
 ;; brainstorm:
