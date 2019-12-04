@@ -37,7 +37,7 @@
   (set-member? binary-ops e))
 
 (define-language verilog
-  (entry Entry)
+  (entry State)
   (terminals
    (symbol (symbol))
    (size (size))
@@ -85,9 +85,8 @@
   (NextState (next-state)
     symbol
     case-statement)
-  (Entry (entry)
-    assign
-    next-state))
+  (State (state)
+    (assign ... next-state)))
 
 (define-pass output-verilog : verilog (ast) -> * ()
   (register-pass : Register (r) -> * ()
@@ -122,7 +121,9 @@
      (list 'case value0 (map cons value1 symbol1) symbol0)])
   (next-state-pass : NextState (ns) -> * ()
     [,symbol symbol])
-  (entry-pass : Entry (e) -> * ()))
+  (state-pass : State (s) -> * ()
+    [(,[assign-pass : assign] ... ,[next-state-pass : next-state])
+     (list assign next-state)]))
 
 ;; brainstorm:
 ;; (pair
