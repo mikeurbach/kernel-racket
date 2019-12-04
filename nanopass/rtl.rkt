@@ -1,6 +1,6 @@
 #lang nanopass
 
-(provide verilog output-verilog)
+(provide rtl-adt output-rtl)
 
 (define (size? e)
   (and (pair? e)
@@ -36,7 +36,7 @@
 (define (binary-op? e)
   (set-member? binary-ops e))
 
-(define-language verilog
+(define-language rtl-adt
   (entry Module)
   (terminals
    (symbol (symbol))
@@ -100,7 +100,7 @@
   (Module (module)
     (symbol (declaration ...) (operation ...))))
 
-(define-pass output-verilog : verilog (ast) -> * ()
+(define-pass output-rtl : rtl-adt (ast) -> * ()
   (register-pass : Register (r) -> * ()
     [(reg ,symbol) (list 'reg symbol)]
     [(reg ,symbol ,size) (list 'reg symbol size)])
