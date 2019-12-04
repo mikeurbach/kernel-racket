@@ -31,13 +31,13 @@
   (set-member? unary-ops e))
 
 (define binary-ops
-  (set '+ '- '* '/ '% '< '<= '> '>= '&& '\|\| '== '!= '& '\| '^ '~^ '^~ '& '~& '~\| '<< '>>))
+  (set '+ '- '* '/ '% '< '<= '> '>= '&& '\|\| '== '!= '& '\| '^ '~^ '^~ '& '~& '~\| '<< '>> '\,))
 
 (define (binary-op? e)
   (set-member? binary-ops e))
 
 (define-language verilog
-  (entry State)
+  (entry Operation)
   (terminals
    (symbol (symbol))
    (size (size))
@@ -57,6 +57,9 @@
   (Output (output)
     (out symbol)
     (out symbol size))
+  (Port (port)
+    input
+    output)
   (MemoryRef (memory-ref)
     register
     constant
@@ -86,7 +89,9 @@
     symbol
     case-statement)
   (State (state)
-    ((assign ...) next-state)))
+    ((assign ...) next-state))
+  (Operation (operation)
+    (symbol (port ...) (state ...))))
 
 (define-pass output-verilog : verilog (ast) -> * ()
   (register-pass : Register (r) -> * ()
@@ -100,6 +105,7 @@
   (output-pass : Output (i) -> * ()
     [(out ,symbol) (list 'out symbol)]
     [(out ,symbol ,size) (list 'out symbol size)])
+  (port-pass : Port (p) -> * ())
   (memory-ref-pass : MemoryRef (mr) -> * ())
   (memory-pass : Memory (m) -> * ()
     [(mem ,symbol ,[memory-ref-pass : memory-ref]) (list 'mem symbol memory-ref)])
@@ -123,7 +129,10 @@
     [,symbol symbol])
   (state-pass : State (s) -> * ()
     [((,[assign-pass : assign] ...) ,[next-state-pass : next-state])
-     (list assign next-state)]))
+     (list assign next-state)])
+  (operation-pass : Operation (o) -> * ()
+    [(,symbol (,[port-pass : port] ...) (,[state-pass : state] ...))
+     (list symbol port state)]))
 
 ;; brainstorm:
 ;; (pair
