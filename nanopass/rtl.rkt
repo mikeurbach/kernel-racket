@@ -102,6 +102,8 @@
 
 (define-language rtl-fsm
   (extends rtl-adt)
+  (OperationEntry (operation-entry)
+    (+ (symbol0 . symbol1)))
   (AssignState (assign-state)
     (+ (symbol (assign ...))))
   (NextStateState (next-state-state)
@@ -112,8 +114,8 @@
         (operation ...)))
     (+ (symbol0
         (port ...)
+        (operation-entry ...)
         (symbol1 ...)
-        (symbol2 ...)
         (declaration ...)
         (assign-state ...)
         (next-state-state ...)))))
@@ -124,9 +126,12 @@
       (remove-duplicates
        (flatten
         (map cadr operations))))
-    (define (extract-operation-names operations)
+    (define (extract-operation-entries operations)
       (for/list ([operation operations])
-        (car operation)))
+        (let ([name (car operation)]
+              [entry (car (caaddr operation))])
+          (with-output-language (rtl-fsm OperationEntry)
+            `(,name . ,entry)))))
     (define (extract-state-names operations)
       (flatten
        (for/list ([operation operations])
@@ -157,13 +162,13 @@
   (module-pass : Module (mo) -> Module ()
     [(,symbol (,[declaration] ...) (,[operation-pass : operation] ...))
      (let ([ports (extract-ports operation)]
-           [operation-names (extract-operation-names operation)]
+           [operation-entries (extract-operation-entries operation)]
            [state-names (extract-state-names operation)]
            [assign-states (extract-assign-states operation)]
            [next-states (extract-next-states operation)])
        `(,symbol
          (,ports ...)
-         (,operation-names ...)
+         (,operation-entries ...)
          (,state-names ...)
          (,declaration ...)
          (,assign-states ...)
@@ -208,17 +213,17 @@
   (module-pass : Module (mo) -> Module ()
     [(,symbol
       (,port ...)
+      (,operation-entry ...)
       (,symbol1 ...)
-      (,symbol2 ...)
       (,declaration ...)
       (,assign-state ...)
       (,next-state-state ...))
-     (let ([augmented-ports (append (boilerplate-ports symbol1) port)]
-           [augmented-declarations (append (boilerplate-declarations symbol2) declaration)])
+     (let ([augmented-ports (append (boilerplate-ports operation-entry) port)]
+           [augmented-declarations (append (boilerplate-declarations symbol1) declaration)])
        `(,symbol
          (,augmented-ports ...)
+         (,operation-entry ...)
          (,symbol1 ...)
-         (,symbol2 ...)
          (,augmented-declarations ...)
          (,assign-state ...)
          (,next-state-state ...)))]))
