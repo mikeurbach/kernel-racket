@@ -107,18 +107,31 @@
   (NextStateState (next-state-state)
     (+ (symbol next-state)))
   (Module (module)
-    (- (symbol (declaration ...) (operation ...)))
-    (+ (symbol0 (port ...) (symbol1 ...) (declaration ...) (assign-state ...) (next-state-state ...)))))
+    (- (symbol
+        (declaration ...)
+        (operation ...)))
+    (+ (symbol0
+        (port ...)
+        (symbol1 ...)
+        (symbol2 ...)
+        (declaration ...)
+        (assign-state ...)
+        (next-state-state ...)))))
 
 (define-pass adt-to-fsm : rtl-adt (ast) -> rtl-fsm ()
   (definitions
-    (define (extract-operation-names operations)
-      (for/list ([operation operations])
-        (car operation)))
     (define (extract-ports operations)
       (remove-duplicates
        (flatten
         (map cadr operations))))
+    (define (extract-operation-names operations)
+      (for/list ([operation operations])
+        (car operation)))
+    (define (extract-state-names operations)
+      (flatten
+       (for/list ([operation operations])
+         (for/list ([state (caddr operation)])
+           (car state)))))
     (define (extract-assign-states operations)
       (flatten
        (for/list ([operation operations])
@@ -143,11 +156,18 @@
      (list symbol port state)])
   (module-pass : Module (mo) -> Module ()
     [(,symbol (,[declaration] ...) (,[operation-pass : operation] ...))
-     (let ([operation-names (extract-operation-names operation)]
-           [ports (extract-ports operation)]
+     (let ([ports (extract-ports operation)]
+           [operation-names (extract-operation-names operation)]
+           [state-names (extract-state-names operation)]
            [assign-states (extract-assign-states operation)]
            [next-states (extract-next-states operation)])
-       `(,symbol (,ports ...) (,operation-names ...) (,declaration ...) (,assign-states ...) (,next-states ...)))]))
+       `(,symbol
+         (,ports ...)
+         (,operation-names ...)
+         (,state-names ...)
+         (,declaration ...)
+         (,assign-states ...)
+         (,next-states ...)))]))
 
 ;; (define-pass output-rtl : rtl-adt (ast) -> * ()
 ;;   (register-pass : Register (r) -> * ()
