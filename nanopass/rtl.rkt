@@ -171,6 +171,9 @@
 
 (define-pass add-boilerplate : rtl-fsm (ast) -> rtl-fsm ()
   (definitions
+    (define (required-size items)
+      (let ([upper (- (exact-ceiling (log (length items) 2)) 1)])
+        (cons upper 0)))
     (define (clk-port)
       (with-output-language (rtl-fsm Port)
         `(in clk)))
@@ -178,8 +181,7 @@
       (with-output-language (rtl-fsm Port)
         `(in start)))
     (define (operation-port operations)
-      (letrec ([upper (- (exact-ceiling (log (length operations) 2)) 1)]
-               [size (cons upper 0)])
+      (let ([size (required-size operations)])
         (with-output-language (rtl-fsm Port)
           `(in operation ,size))))
     (define (busy-port)
@@ -190,7 +192,19 @@
        (clk-port)
        (start-port)
        (operation-port operations)
-       (busy-port))))
+       (busy-port)))
+    (define (state-reg states)
+      (let ([size (required-size states)])
+        (with-output-language (rtl-fsm Declaration)
+          `(reg state ,size))))
+    (define (next-state-reg states)
+      (let ([size (required-size states)])
+        (with-output-language (rtl-fsm Declaration)
+          `(reg next_state ,size))))
+    (define (boilerplate-declarations states)
+      (list
+       (state-reg states)
+       (next-state-reg states))))
   (module-pass : Module (mo) -> Module ()
     [(,symbol
       (,port ...)
@@ -199,12 +213,13 @@
       (,declaration ...)
       (,assign-state ...)
       (,next-state-state ...))
-     (let ([augmented-ports (append (boilerplate-ports symbol1) port)])
+     (let ([augmented-ports (append (boilerplate-ports symbol1) port)]
+           [augmented-declarations (append (boilerplate-declarations symbol2) declaration)])
        `(,symbol
          (,augmented-ports ...)
          (,symbol1 ...)
          (,symbol2 ...)
-         (,declaration ...)
+         (,augmented-declarations ...)
          (,assign-state ...)
          (,next-state-state ...)))]))
 
