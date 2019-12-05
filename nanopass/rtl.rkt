@@ -76,6 +76,7 @@
     memory
     output)
   (Value (value)
+    symbol
     register
     constant
     memory
@@ -89,7 +90,7 @@
     (target unary-op value)
     (target value1 binary-op value2))
   (CaseStatement (case-statement)
-    (case value0 (value1 symbol1) ... symbol0))
+    (case value0 ((value1 symbol1) ...) symbol0))
   (NextState (next-state)
     symbol
     case-statement)
@@ -209,7 +210,31 @@
     (define (boilerplate-declarations states)
       (list
        (state-reg states)
-       (next-state-reg states))))
+       (next-state-reg states)))
+    (define (init-assign)
+      (with-output-language (rtl-fsm AssignState)
+        `(init (((reg busy) (const 1 b 0))))))
+    (define (op-case-assign)
+      (with-output-language (rtl-fsm AssignState)
+        `(op_case (((reg busy) (const 1 b 1))))))
+    (define (boilerplate-assign-states)
+      (list
+       (init-assign)
+       (op-case-assign)))
+    (define (init-next-state)
+      (with-output-language (rtl-fsm NextStateState)
+        `(init (case (reg start) (((const 1 b 1) op_case)) init))))
+    (define (op-case-next-state operation-entries)
+      (let ([cases (map (lambda (p) (list (car p) (cdr p))) operation-entries)])
+        (displayln cases)
+        (with-output-language (rtl-fsm NextStateState)
+          `(op_case (case (in operation) () init))))) ;; TODO figure out how to insert cases
+    (define (boilerplate-next-states operation-entries)
+      (list
+       (init-next-state)
+       (op-case-next-state operation-entries))))
+  (operation-entry-pass : OperationEntry (oe) -> * ()
+    [(,symbol0 . ,symbol1) (cons symbol0 symbol1)])
   (module-pass : Module (mo) -> Module ()
     [(,symbol
       (,port ...)
@@ -218,15 +243,18 @@
       (,declaration ...)
       (,assign-state ...)
       (,next-state-state ...))
-     (let ([augmented-ports (append (boilerplate-ports operation-entry) port)]
-           [augmented-declarations (append (boilerplate-declarations symbol1) declaration)])
-       `(,symbol
-         (,augmented-ports ...)
-         (,operation-entry ...)
-         (,symbol1 ...)
-         (,augmented-declarations ...)
-         (,assign-state ...)
-         (,next-state-state ...)))]))
+     (let ([operation-entries (map operation-entry-pass operation-entry)])
+       (let ([augmented-ports (append (boilerplate-ports operation-entries) port)]
+             [augmented-declarations (append (boilerplate-declarations symbol1) declaration)]
+             [augmented-assign-states (append (boilerplate-assign-states) assign-state)]
+             [augmented-next-states (append (boilerplate-next-states operation-entries) next-state-state)])
+         `(,symbol
+           (,augmented-ports ...)
+           (,operation-entry ...)
+           (,symbol1 ...)
+           (,augmented-declarations ...)
+           (,augmented-assign-states ...)
+           (,augmented-next-states ...))))]))
 
 ;; (define-pass output-rtl : rtl-adt (ast) -> * ()
 ;;   (register-pass : Register (r) -> * ()
