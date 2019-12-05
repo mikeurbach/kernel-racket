@@ -4,9 +4,9 @@
 
 (define-parser rtl-adt-parser rtl-adt)
 
-;; RTL to FSM Transform
+;; Pair module full pass
 
-(adt-to-fsm
+(define pair-adt
  (rtl-adt-parser
   '(pair
     ((mem cars (8 . 0) (255 . 0))
@@ -46,6 +46,11 @@
       ((set_cdr0
         (((mem cdrs (in pair (7 . 0))) (in cdr)))
         init)))))))
+
+((compose1
+  add-boilerplate
+  adt-to-fsm)
+ pair-adt)
 
 ;; Basic Assigns
 

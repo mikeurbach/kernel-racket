@@ -1,6 +1,6 @@
 #lang nanopass
 
-(provide rtl-adt adt-to-fsm)
+(provide rtl-adt adt-to-fsm add-boilerplate)
 
 (define (size? e)
   (and (pair? e)
@@ -168,6 +168,45 @@
          (,declaration ...)
          (,assign-states ...)
          (,next-states ...)))]))
+
+(define-pass add-boilerplate : rtl-fsm (ast) -> rtl-fsm ()
+  (definitions
+    (define (clk-port)
+      (with-output-language (rtl-fsm Port)
+        `(in clk)))
+    (define (start-port)
+      (with-output-language (rtl-fsm Port)
+        `(in start)))
+    (define (operation-port operations)
+      (letrec ([upper (- (exact-ceiling (log (length operations) 2)) 1)]
+               [size (cons upper 0)])
+        (with-output-language (rtl-fsm Port)
+          `(in operation ,size))))
+    (define (busy-port)
+      (with-output-language (rtl-fsm Port)
+        `(out busy)))
+    (define (boilerplate-ports operations)
+      (list
+       (clk-port)
+       (start-port)
+       (operation-port operations)
+       (busy-port))))
+  (module-pass : Module (mo) -> Module ()
+    [(,symbol
+      (,port ...)
+      (,symbol1 ...)
+      (,symbol2 ...)
+      (,declaration ...)
+      (,assign-state ...)
+      (,next-state-state ...))
+     (let ([augmented-ports (append (boilerplate-ports symbol1) port)])
+       `(,symbol
+         (,augmented-ports ...)
+         (,symbol1 ...)
+         (,symbol2 ...)
+         (,declaration ...)
+         (,assign-state ...)
+         (,next-state-state ...)))]))
 
 ;; (define-pass output-rtl : rtl-adt (ast) -> * ()
 ;;   (register-pass : Register (r) -> * ()
