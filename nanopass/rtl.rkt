@@ -108,7 +108,7 @@
     (+ (symbol next-state)))
   (Module (module)
     (- (symbol (declaration ...) (operation ...)))
-    (+ (symbol0 (symbol1 ...) (port ...) (declaration ...) (assign-state ...) (next-state-state ...)))))
+    (+ (symbol0 (port ...) (symbol1 ...) (declaration ...) (assign-state ...) (next-state-state ...)))))
 
 (define-pass adt-to-fsm : rtl-adt (ast) -> rtl-fsm ()
   (definitions
@@ -147,7 +147,7 @@
            [ports (extract-ports operation)]
            [assign-states (extract-assign-states operation)]
            [next-states (extract-next-states operation)])
-       `(,symbol (,operation-names ...) (,ports ...) (,declaration ...) (,assign-states ...) (,next-states ...)))]))
+       `(,symbol (,ports ...) (,operation-names ...) (,declaration ...) (,assign-states ...) (,next-states ...)))]))
 
 ;; (define-pass output-rtl : rtl-adt (ast) -> * ()
 ;;   (register-pass : Register (r) -> * ()
