@@ -1,6 +1,13 @@
 #lang nanopass
 
-(provide rtl-adt adt-to-fsm add-boilerplate add-registered-targets)
+(require pprint)
+
+(provide
+ rtl-adt
+ adt-to-fsm
+ add-boilerplate
+ add-registered-targets
+ preprint-to-pprint)
 
 (define (size? e)
   (and (pair? e)
@@ -242,13 +249,13 @@
   (operation-entry-pass : OperationEntry (oe) -> * ()
     [(,symbol0 . ,symbol1) (cons symbol0 symbol1)])
   (module-pass : Module (mo) -> Module ()
-    [(,[module-name]
-      (,[port] ...)
-      (,[operation-entry] ...)
-      (,[state-name] ...)
-      (,[declaration] ...)
-      (,[assign-state] ...)
-      (,[next-state-state] ...))
+    [(,module-name
+      (,port ...)
+      (,operation-entry ...)
+      (,state-name ...)
+      (,declaration ...)
+      (,assign-state ...)
+      (,next-state-state ...))
      (let ([operation-entries (map operation-entry-pass operation-entry)])
        (let ([augmented-ports (append (boilerplate-ports operation-entries) port)]
              [augmented-state-names (append (boilerplate-state-names) state-name)]
@@ -319,6 +326,50 @@
            (,registered-targets ...)
            (,assign-state ...)
            (,next-state-state ...))))]))
+
+(define-pass preprint-to-pprint : rtl-preprint (ast) -> * ()
+  (definitions
+    (define (pprint-size size)
+      (h-append
+       lbracket
+       (text (number->string (car size)))
+       colon
+       (text (number->string (cdr size)))
+       rbracket))
+    (define (pprint-port type name size)
+      (h-append
+       (hs-append
+        (text type)
+        (if (empty? size)
+            empty
+            (pprint-size size))
+        (text (symbol->string name))))))
+  (module-name-pass : ModuleName (mn) -> * ()
+    [,symbol (text (symbol->string symbol))])
+  (input-pass : Input (i) -> * ()
+    [(in ,symbol) (pprint-port "input" symbol null)]
+    [(in ,symbol ,size) (pprint-port "input" symbol size)])
+  (output-pass : Output (i) -> * ()
+    [(out ,symbol) (pprint-port "output reg" symbol null)]
+    [(out ,symbol ,size) (pprint-port "output reg" symbol size)])
+  (port-pass : Port (p) -> * ())
+  (module-pass : Module (m) -> * ()
+    [(,[module-name-pass : doc0]
+      (,[port-pass : doc1] ...)
+      (,operation-entry ...)
+      (,state-name ...)
+      (,declaration ...)
+      (,registered-target ...)
+      (,assign-state ...)
+      (,next-state-state ...))
+     (v-append
+      (nest 2 (v-append
+               (hs-append
+                (text "module") doc0 (text "("))
+               (v-concat
+                (apply-infix (text ",") doc1))))
+      (text ");")
+      (text "endmodule"))]))
 
 ;; (define-pass output-rtl : rtl-adt (ast) -> * ()
 ;;   (register-pass : Register (r) -> * ()
