@@ -6,7 +6,7 @@
  rtl-adt
  adt-to-fsm
  add-boilerplate
- add-registered-targets
+ add-default-assigns
  preprint-to-pprint)
 
 (define (size? e)
@@ -275,9 +275,8 @@
 
 (define-language rtl-preprint
   (extends rtl-fsm)
-  (RegisteredTarget (registered-target)
-   (+ output
-      register))
+  (DefaultAssign (default-assign)
+   (+ (symbol0 . symbol1)))
   (Module (module)
     (- (module-name
         (port ...)
@@ -291,25 +290,52 @@
         (operation-entry ...)
         (state-name ...)
         (declaration ...)
-        (registered-target ...)
+        (default-assign ...)
         (assign-state ...)
         (next-state-state ...)))))
 
-(define-pass add-registered-targets : rtl-fsm (ast) -> rtl-preprint ()
+(define-pass add-default-assigns : rtl-fsm (ast) -> rtl-preprint ()
   (definitions
+    (define defaults
+      (with-output-language (rtl-preprint DefaultAssign)
+        (list
+         `(state . next_state))))
+    (define system-registers
+      (set 'state 'next_state))
     (define (output? e)
       (nanopass-case (rtl-preprint Port) e
         [(out ,symbol) #t]
+        [(out ,symbol ,size) #t]
         [else #f]))
     (define (register? e)
       (nanopass-case (rtl-preprint Declaration) e
-        [(reg ,symbol) #t]
-        [(reg ,symbol ,size) #t]
+        [(reg ,symbol) (not (set-member? system-registers symbol))]
+        [(reg ,symbol ,size) (not (set-member? system-registers symbol))]
+        [((reg ,symbol) ,value) (not (set-member? system-registers symbol))]
+        [((reg ,symbol ,size) ,value) (not (set-member? system-registers symbol))]
         [else #f]))
-    (define (extract-outputs ports)
-      (filter output? ports))
-    (define (extract-registers declarations)
-      (filter register? declarations)))
+    (define (extract-output e)
+      (nanopass-case (rtl-preprint Port) e
+        [(out ,symbol)
+         (with-output-language (rtl-preprint DefaultAssign)
+           `(,symbol . ,symbol))]
+        [(out ,symbol ,size)
+         (with-output-language (rtl-preprint DefaultAssign)
+           `(,symbol . ,symbol))]))
+    (define (extract-register e)
+      (nanopass-case (rtl-preprint Declaration) e
+        [(reg ,symbol)
+         (with-output-language (rtl-preprint DefaultAssign)
+           `(,symbol . ,symbol))]
+        [(reg ,symbol ,size)
+         (with-output-language (rtl-preprint DefaultAssign)
+           `(,symbol . ,symbol))]
+        [((reg ,symbol) ,value)
+         (with-output-language (rtl-preprint DefaultAssign)
+           `(,symbol . ,symbol))]
+        [((reg ,symbol ,size) ,value)
+         (with-output-language (rtl-preprint DefaultAssign)
+           `(,symbol . ,symbol))])))
   (module-pass : Module (mo) -> Module ()
     [(,[module-name]
       (,[port] ...)
@@ -318,15 +344,15 @@
       (,[declaration] ...)
       (,[assign-state] ...)
       (,[next-state-state] ...))
-     (let ([outputs (extract-outputs port)]
-           [registers (extract-registers declaration)])
-       (let ([registered-targets (append outputs registers)])
+     (let ([outputs (map extract-output (filter output? port))]
+           [registers (map extract-register (filter register? declaration))])
+       (let ([default-assigns (append defaults outputs registers)])
          `(,module-name
            (,port ...)
            (,operation-entry ...)
            (,state-name ...)
            (,declaration ...)
-           (,registered-targets ...)
+           (,default-assigns ...)
            (,assign-state ...)
            (,next-state-state ...))))]))
 
@@ -379,6 +405,12 @@
   (output-pass : Output (i) -> * ()
     [(out ,symbol) (pprint-register "output reg" symbol null)]
     [(out ,symbol ,size) (pprint-register "output reg" symbol size)])
+  (output-value-pass : Output (o) -> * ()
+    [(out ,symbol) (text (symbol->string symbol))]
+    [(out ,symbol ,size)
+     (h-append
+      (text (symbol->string symbol))
+      (pprint-size size))])
   (port-pass : Port (p) -> * ()
     [,input (input-pass input)]
     [,output (output-pass output)])
@@ -434,13 +466,21 @@
   (declaration-pass : Declaration (d) -> * ()
     [,register-decl (h-append (register-decl-pass register-decl) semi)]
     [,memory-decl (h-append (memory-decl-pass memory-decl) semi)])
+  (default-assign-pass : DefaultAssign (da) -> * ()
+    [(,symbol0 . ,symbol1)
+     (h-append
+      (hs-append
+       (text (symbol->string symbol0))
+       (text "<=")
+       (text (symbol->string symbol1)))
+      semi)])
   (module-pass : Module (m) -> * ()
     [(,[module-name-pass : doc0]
       (,[port-pass : doc1] ...)
       (,[operation-entry-pass : doc2] ...)
       (,[state-name-pass : doc3] ...)
       (,[declaration-pass : doc4] ...)
-      (,registered-target ...)
+      (,[default-assign-pass : doc5] ...)
       (,assign-state ...)
       (,next-state-state ...))
      (v-append
@@ -455,7 +495,13 @@
                empty
                (v-concat doc3)
                empty
-               (v-concat doc4)))
+               (v-concat doc4)
+               empty
+               (v-append
+                (nest 2 (v-append
+                         (text "always @(posedge clk) begin")
+                         (v-concat doc5)))
+                (text "end"))))
       (text "endmodule"))]))
 
 ;; (define-pass output-rtl : rtl-adt (ast) -> * ()

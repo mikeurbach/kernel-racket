@@ -50,7 +50,7 @@
 ((compose1
   pretty-print
   preprint-to-pprint
-  add-registered-targets
+  add-default-assigns
   add-boilerplate
   adt-to-fsm)
  pair-adt)
