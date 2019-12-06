@@ -329,6 +329,11 @@
 
 (define-pass preprint-to-pprint : rtl-preprint (ast) -> * ()
   (definitions
+    (define op-counter
+      (let ([counter -1])
+        (lambda ()
+          (set! counter (+ 1 counter))
+          counter)))
     (define (pprint-size size)
       (h-append
        lbracket
@@ -353,10 +358,19 @@
     [(out ,symbol) (pprint-port "output reg" symbol null)]
     [(out ,symbol ,size) (pprint-port "output reg" symbol size)])
   (port-pass : Port (p) -> * ())
+  (operation-entry-pass : OperationEntry (oe) -> * ()
+    [(,symbol0 . ,symbol1)
+     (h-append
+      (hs-append
+       (text "localparam")
+       (text (symbol->string symbol0))
+       equals
+       (text (number->string (op-counter))))
+      semi)])
   (module-pass : Module (m) -> * ()
     [(,[module-name-pass : doc0]
       (,[port-pass : doc1] ...)
-      (,operation-entry ...)
+      (,[operation-entry-pass : doc2] ...)
       (,state-name ...)
       (,declaration ...)
       (,registered-target ...)
@@ -368,7 +382,9 @@
                 (text "module") doc0 (text "("))
                (v-concat
                 (apply-infix (text ",") doc1))))
-      (text ");")
+      (nest 2 (v-append
+               (text ");")
+               (v-concat doc2)))
       (text "endmodule"))]))
 
 ;; (define-pass output-rtl : rtl-adt (ast) -> * ()
