@@ -231,9 +231,10 @@
       (with-output-language (rtl-fsm NextStateState)
         `(init (case (reg start) (((const 1 b 1) op_case)) init))))
     (define (op-case-next-state operation-entries)
-      (let ([cases (map (lambda (p) (list (car p) (cdr p))) operation-entries)])
+      (let ([case-values (map car operation-entries)]
+            [case-labels (map cdr operation-entries)])
         (with-output-language (rtl-fsm NextStateState)
-          `(op_case (case (in operation) () init))))) ;; TODO figure out how to insert cases
+          `(op_case (case (in operation) ((,case-values ,case-labels) ...) init)))))
     (define (boilerplate-next-states operation-entries)
       (list
        (init-next-state)
