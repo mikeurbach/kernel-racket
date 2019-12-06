@@ -346,7 +346,7 @@
        colon
        (text (number->string (cdr size)))
        rbracket))
-    (define (pprint-port type name size)
+    (define (pprint-register type name size)
       (h-append
        (hs-append
         (text type)
@@ -365,22 +365,33 @@
   (module-name-pass : ModuleName (mn) -> * ()
     [,symbol (text (symbol->string symbol))])
   (input-pass : Input (i) -> * ()
-    [(in ,symbol) (pprint-port "input" symbol null)]
-    [(in ,symbol ,size) (pprint-port "input" symbol size)])
+    [(in ,symbol) (pprint-register "input" symbol null)]
+    [(in ,symbol ,size) (pprint-register "input" symbol size)])
   (output-pass : Output (i) -> * ()
-    [(out ,symbol) (pprint-port "output reg" symbol null)]
-    [(out ,symbol ,size) (pprint-port "output reg" symbol size)])
+    [(out ,symbol) (pprint-register "output reg" symbol null)]
+    [(out ,symbol ,size) (pprint-register "output reg" symbol size)])
   (port-pass : Port (p) -> * ())
   (operation-entry-pass : OperationEntry (oe) -> * ()
     [(,symbol0 . ,symbol1) (pprint-localparam symbol0 op-counter)])
   (state-name-pass : StateName (sn) -> * ()
     [,symbol (pprint-localparam symbol state-counter)])
+  (register-pass : Register (r) -> * ()
+    [(reg ,symbol) (pprint-register "reg" symbol null)]
+    [(reg ,symbol ,size) (pprint-register "reg" symbol size)])
+  (memory-decl-pass : MemoryDecl (md) -> * ()
+    [(mem ,symbol ,size0 ,size1)
+     (hs-append
+      (pprint-register "reg" symbol size0)
+      (pprint-size size1))])
+  (declaration-pass : Declaration (d) -> * ()
+    [,register (h-append (register-pass register) semi)]
+    [,memory-decl (h-append (memory-decl-pass memory-decl) semi)])
   (module-pass : Module (m) -> * ()
     [(,[module-name-pass : doc0]
       (,[port-pass : doc1] ...)
       (,[operation-entry-pass : doc2] ...)
       (,[state-name-pass : doc3] ...)
-      (,declaration ...)
+      (,[declaration-pass : doc4] ...)
       (,registered-target ...)
       (,assign-state ...)
       (,next-state-state ...))
@@ -394,7 +405,9 @@
                (text ");")
                (v-concat doc2)
                empty
-               (v-concat doc3)))
+               (v-concat doc3)
+               empty
+               (v-concat doc4)))
       (text "endmodule"))]))
 
 ;; (define-pass output-rtl : rtl-adt (ast) -> * ()
