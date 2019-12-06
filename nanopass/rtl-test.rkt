@@ -11,7 +11,7 @@
   '(pair
     ((mem cars (8 . 0) (255 . 0))
      (mem cdrs (8 . 0) (255 . 0))
-     (reg addr (8 . 0)))
+     ((reg addr (7 . 0)) (const 8 d 1)))
     ((cons
       ((in car (8 . 0))
        (in cdr (8 . 0))
