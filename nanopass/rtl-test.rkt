@@ -48,6 +48,7 @@
         init)))))))
 
 ((compose1
+  add-registered-targets
   add-boilerplate
   adt-to-fsm)
  pair-adt)
