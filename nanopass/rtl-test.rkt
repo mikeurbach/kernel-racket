@@ -1,6 +1,6 @@
 #lang nanopass
 
-(require "rtl.rkt")
+(require "rtl.rkt" pprint)
 
 (define-parser rtl-adt-parser rtl-adt)
 
@@ -15,39 +15,41 @@
     ((cons
       ((in car (8 . 0))
        (in cdr (8 . 0))
-       (out pair (8 . 0)))
+       (out pair_out (8 . 0)))
       ((cons0
         (((mem cars (reg addr)) (in car))
          ((mem cdrs (reg addr)) (in cdr))
          ((reg addr) (reg addr) (op +) (const 1 d 1))
-         ((out pair) (const 1 b 1) (op \,) (reg addr)))
+         ((out pair_out) (const 1 b 1) (op \,) (reg addr)))
         init)))
      (car
-      ((in pair (8 . 0))
-       (out pair (8 . 0)))
+      ((in pair_in (8 . 0))
+       (out pair_out (8 . 0)))
       ((car0
-        (((out pair) (mem cars (in pair (7 . 0)))))
+        (((out pair_out) (mem cars (in pair_in (7 . 0)))))
         init)))
      (cdr
-      ((in pair (8 . 0))
-       (out pair (8 . 0)))
+      ((in pair_in (8 . 0))
+       (out pair_out (8 . 0)))
       ((cdr0
-        (((out pair) (mem cdrs (in pair (7 . 0)))))
+        (((out pair_out) (mem cdrs (in pair_in (7 . 0)))))
         init)))
      (set_car
-      ((in pair (8 . 0))
+      ((in pair_in (8 . 0))
        (in car (8 . 0)))
       ((set_car0
-        (((mem cars (in pair (7 . 0))) (in car)))
+        (((mem cars (in pair_in (7 . 0))) (in car)))
         init)))
      (set_cdr
-      ((in pair (8 . 0))
+      ((in pair_in (8 . 0))
        (in cdr (8 . 0)))
       ((set_cdr0
-        (((mem cdrs (in pair (7 . 0))) (in cdr)))
+        (((mem cdrs (in pair_in (7 . 0))) (in cdr)))
         init)))))))
 
 ((compose1
+  pretty-print
+  preprint-to-pprint
   add-registered-targets
   add-boilerplate
   adt-to-fsm)
