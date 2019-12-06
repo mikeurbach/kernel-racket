@@ -14,6 +14,7 @@
 ** How to remove hard-coded bitwidth in literals? (parameters might just be done in intermediate lang)
 ** How will lazy evaluation fit in?
 ** Can operations share ports? (currently they will if they name them the same)
+** Either check uniqueness of operation/state names or use gensyms or something
 * Tasks
 ** TODO design final nanopass language for generating verilog modules
 *** DONE module name

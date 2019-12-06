@@ -334,6 +334,11 @@
         (lambda ()
           (set! counter (+ 1 counter))
           counter)))
+    (define state-counter
+      (let ([counter -1])
+        (lambda ()
+          (set! counter (+ 1 counter))
+          counter)))
     (define (pprint-size size)
       (h-append
        lbracket
@@ -348,7 +353,15 @@
         (if (empty? size)
             empty
             (pprint-size size))
-        (text (symbol->string name))))))
+        (text (symbol->string name)))))
+    (define (pprint-localparam symbol counter-proc)
+      (h-append
+       (hs-append
+        (text "localparam")
+        (text (symbol->string symbol))
+        equals
+        (text (number->string (counter-proc))))
+       semi)))
   (module-name-pass : ModuleName (mn) -> * ()
     [,symbol (text (symbol->string symbol))])
   (input-pass : Input (i) -> * ()
@@ -359,19 +372,14 @@
     [(out ,symbol ,size) (pprint-port "output reg" symbol size)])
   (port-pass : Port (p) -> * ())
   (operation-entry-pass : OperationEntry (oe) -> * ()
-    [(,symbol0 . ,symbol1)
-     (h-append
-      (hs-append
-       (text "localparam")
-       (text (symbol->string symbol0))
-       equals
-       (text (number->string (op-counter))))
-      semi)])
+    [(,symbol0 . ,symbol1) (pprint-localparam symbol0 op-counter)])
+  (state-name-pass : StateName (sn) -> * ()
+    [,symbol (pprint-localparam symbol state-counter)])
   (module-pass : Module (m) -> * ()
     [(,[module-name-pass : doc0]
       (,[port-pass : doc1] ...)
       (,[operation-entry-pass : doc2] ...)
-      (,state-name ...)
+      (,[state-name-pass : doc3] ...)
       (,declaration ...)
       (,registered-target ...)
       (,assign-state ...)
@@ -384,7 +392,9 @@
                 (apply-infix (text ",") doc1))))
       (nest 2 (v-append
                (text ");")
-               (v-concat doc2)))
+               (v-concat doc2)
+               empty
+               (v-concat doc3)))
       (text "endmodule"))]))
 
 ;; (define-pass output-rtl : rtl-adt (ast) -> * ()
