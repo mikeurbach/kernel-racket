@@ -203,6 +203,8 @@
        (start-port)
        (operation-port operations)
        (busy-port)))
+    (define (boilerplate-state-names)
+      '(init op_case))
     (define (state-reg states)
       (let ([size (required-size states)])
         (with-output-language (rtl-fsm Declaration)
@@ -248,13 +250,14 @@
       (,next-state-state ...))
      (let ([operation-entries (map operation-entry-pass operation-entry)])
        (let ([augmented-ports (append (boilerplate-ports operation-entries) port)]
+             [augmented-state-names (append (boilerplate-state-names) state-name)]
              [augmented-declarations (append (boilerplate-declarations state-name) declaration)]
              [augmented-assign-states (append (boilerplate-assign-states) assign-state)]
              [augmented-next-states (append (boilerplate-next-states operation-entries) next-state-state)])
          `(,symbol
            (,augmented-ports ...)
            (,operation-entry ...)
-           (,state-name ...)
+           (,augmented-state-names ...)
            (,augmented-declarations ...)
            (,augmented-assign-states ...)
            (,augmented-next-states ...))))]))
