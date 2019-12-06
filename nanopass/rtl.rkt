@@ -1,6 +1,6 @@
 #lang nanopass
 
-(provide rtl-adt adt-to-fsm add-boilerplate)
+(provide rtl-adt adt-to-fsm add-boilerplate add-registered-targets)
 
 (define (size? e)
   (and (pair? e)
@@ -242,26 +242,83 @@
   (operation-entry-pass : OperationEntry (oe) -> * ()
     [(,symbol0 . ,symbol1) (cons symbol0 symbol1)])
   (module-pass : Module (mo) -> Module ()
-    [(,symbol
-      (,port ...)
-      (,operation-entry ...)
-      (,state-name ...)
-      (,declaration ...)
-      (,assign-state ...)
-      (,next-state-state ...))
+    [(,[module-name]
+      (,[port] ...)
+      (,[operation-entry] ...)
+      (,[state-name] ...)
+      (,[declaration] ...)
+      (,[assign-state] ...)
+      (,[next-state-state] ...))
      (let ([operation-entries (map operation-entry-pass operation-entry)])
        (let ([augmented-ports (append (boilerplate-ports operation-entries) port)]
              [augmented-state-names (append (boilerplate-state-names) state-name)]
              [augmented-declarations (append (boilerplate-declarations state-name) declaration)]
              [augmented-assign-states (append (boilerplate-assign-states) assign-state)]
              [augmented-next-states (append (boilerplate-next-states operation-entries) next-state-state)])
-         `(,symbol
+         `(,module-name
            (,augmented-ports ...)
            (,operation-entry ...)
            (,augmented-state-names ...)
            (,augmented-declarations ...)
            (,augmented-assign-states ...)
            (,augmented-next-states ...))))]))
+
+(define-language rtl-preprint
+  (extends rtl-fsm)
+  (RegisteredTarget (registered-target)
+   (+ output
+      register))
+  (Module (module)
+    (- (module-name
+        (port ...)
+        (operation-entry ...)
+        (state-name ...)
+        (declaration ...)
+        (assign-state ...)
+        (next-state-state ...)))
+    (+ (module-name
+        (port ...)
+        (operation-entry ...)
+        (state-name ...)
+        (declaration ...)
+        (registered-target ...)
+        (assign-state ...)
+        (next-state-state ...)))))
+
+(define-pass add-registered-targets : rtl-fsm (ast) -> rtl-preprint ()
+  (definitions
+    (define (output? e)
+      (nanopass-case (rtl-preprint Port) e
+        [(out ,symbol) #t]
+        [else #f]))
+    (define (register? e)
+      (nanopass-case (rtl-preprint Declaration) e
+        [(reg ,symbol) #t]
+        [(reg ,symbol ,size) #t]
+        [else #f]))
+    (define (extract-outputs ports)
+      (filter output? ports))
+    (define (extract-registers declarations)
+      (filter register? declarations)))
+  (module-pass : Module (mo) -> Module ()
+    [(,[module-name]
+      (,[port] ...)
+      (,[operation-entry] ...)
+      (,[state-name] ...)
+      (,[declaration] ...)
+      (,[assign-state] ...)
+      (,[next-state-state] ...))
+     (let ([outputs (extract-outputs port)]
+           [registers (extract-registers declaration)])
+       (let ([registered-targets (append outputs registers)])
+         `(,module-name
+           (,port ...)
+           (,operation-entry ...)
+           (,state-name ...)
+           (,declaration ...)
+           (,registered-targets ...)
+           (,assign-state ...)
+           (,next-state-state ...))))]))
 
 ;; (define-pass output-rtl : rtl-adt (ast) -> * ()
 ;;   (register-pass : Register (r) -> * ()
