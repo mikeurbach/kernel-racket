@@ -395,7 +395,7 @@
      (h-append
       (text (symbol->string symbol))
       (pprint-size size))])
-  (constant-value-pass : Constant (c) -> * ()
+  (constant-pass : Constant (c) -> * ()
     [(const ,bitwidth ,baseident ,literal)
      (h-append
       (text (number->string bitwidth))
@@ -404,11 +404,20 @@
       (text
        (cond [(number? literal) (number->string literal)]
              [(symbol? literal) (symbol->string literal)])))])
+  (memory-ref-pass : MemoryRef (mr) -> * ()
+    [,register (register-value-pass register)]
+    [,constant (constant-pass constant)]
+    [,input (input-value-pass input)])
+  (memory-pass : Memory (m) -> * ()
+    [(mem ,symbol ,[memory-ref-pass : doc])
+     (h-append
+      symbol
+      doc)])
   (value-pass : Value (v) -> * ()
     [,symbol (text (symbol->string symbol))]
     [,register (register-value-pass register)]
-    [,constant (constant-value-pass constant)]
-    [,memory (text "memory-value")] ;; TODO implement memory value
+    [,constant (constant-pass constant)]
+    [,memory (memory-pass memory)]
     [,input (input-value-pass input)])
   (register-decl-pass : RegisterDecl (rd) -> * ()
     [,register (register-pass register)]
