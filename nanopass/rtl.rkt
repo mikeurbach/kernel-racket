@@ -98,25 +98,29 @@
     (symbol (assign ...) next-state))
   (Operation (operation)
     (symbol (port ...) (state ...)))
+  (ModuleName (module-name)
+    symbol)
   (Module (module)
-    (symbol (declaration ...) (operation ...))))
+    (module-name (declaration ...) (operation ...))))
 
 (define-language rtl-fsm
   (extends rtl-adt)
   (OperationEntry (operation-entry)
     (+ (symbol0 . symbol1)))
+  (StateName (state-name)
+    (+ symbol))
   (AssignState (assign-state)
     (+ (symbol (assign ...))))
   (NextStateState (next-state-state)
     (+ (symbol next-state)))
   (Module (module)
-    (- (symbol
+    (- (module-name
         (declaration ...)
         (operation ...)))
-    (+ (symbol0
+    (+ (module-name
         (port ...)
         (operation-entry ...)
-        (symbol1 ...)
+        (state-name ...)
         (declaration ...)
         (assign-state ...)
         (next-state-state ...)))))
@@ -161,13 +165,13 @@
     [(,symbol (,[port] ...) (,[state-pass : state] ...))
      (list symbol port state)])
   (module-pass : Module (mo) -> Module ()
-    [(,symbol (,[declaration] ...) (,[operation-pass : operation] ...))
+    [(,module-name (,[declaration] ...) (,[operation-pass : operation] ...))
      (let ([ports (extract-ports operation)]
            [operation-entries (extract-operation-entries operation)]
            [state-names (extract-state-names operation)]
            [assign-states (extract-assign-states operation)]
            [next-states (extract-next-states operation)])
-       `(,symbol
+       `(,module-name
          (,ports ...)
          (,operation-entries ...)
          (,state-names ...)
@@ -226,7 +230,6 @@
         `(init (case (reg start) (((const 1 b 1) op_case)) init))))
     (define (op-case-next-state operation-entries)
       (let ([cases (map (lambda (p) (list (car p) (cdr p))) operation-entries)])
-        (displayln cases)
         (with-output-language (rtl-fsm NextStateState)
           `(op_case (case (in operation) () init))))) ;; TODO figure out how to insert cases
     (define (boilerplate-next-states operation-entries)
@@ -239,19 +242,19 @@
     [(,symbol
       (,port ...)
       (,operation-entry ...)
-      (,symbol1 ...)
+      (,state-name ...)
       (,declaration ...)
       (,assign-state ...)
       (,next-state-state ...))
      (let ([operation-entries (map operation-entry-pass operation-entry)])
        (let ([augmented-ports (append (boilerplate-ports operation-entries) port)]
-             [augmented-declarations (append (boilerplate-declarations symbol1) declaration)]
+             [augmented-declarations (append (boilerplate-declarations state-name) declaration)]
              [augmented-assign-states (append (boilerplate-assign-states) assign-state)]
              [augmented-next-states (append (boilerplate-next-states operation-entries) next-state-state)])
          `(,symbol
            (,augmented-ports ...)
            (,operation-entry ...)
-           (,symbol1 ...)
+           (,state-name ...)
            (,augmented-declarations ...)
            (,augmented-assign-states ...)
            (,augmented-next-states ...))))]))
