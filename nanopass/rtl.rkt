@@ -73,10 +73,13 @@
     input)
   (Memory (memory)
     (mem symbol memory-ref))
+  (RegisterDecl (register-decl)
+    register
+    (register value))
   (MemoryDecl (memory-decl)
     (mem symbol size0 size1))
   (Declaration (declaration)
-    register
+    register-decl
     memory-decl)
   (Target (target)
     register
@@ -367,10 +370,18 @@
   (input-pass : Input (i) -> * ()
     [(in ,symbol) (pprint-register "input" symbol null)]
     [(in ,symbol ,size) (pprint-register "input" symbol size)])
+  (input-value-pass : Input (i) -> * ()
+    [(in ,symbol) (text (symbol->string symbol))]
+    [(in ,symbol ,size)
+     (h-append
+      (text (symbol->string symbol))
+      (pprint-size size))])
   (output-pass : Output (i) -> * ()
     [(out ,symbol) (pprint-register "output reg" symbol null)]
     [(out ,symbol ,size) (pprint-register "output reg" symbol size)])
-  (port-pass : Port (p) -> * ())
+  (port-pass : Port (p) -> * ()
+    [,input (input-pass input)]
+    [,output (output-pass output)])
   (operation-entry-pass : OperationEntry (oe) -> * ()
     [(,symbol0 . ,symbol1) (pprint-localparam symbol0 op-counter)])
   (state-name-pass : StateName (sn) -> * ()
@@ -378,13 +389,41 @@
   (register-pass : Register (r) -> * ()
     [(reg ,symbol) (pprint-register "reg" symbol null)]
     [(reg ,symbol ,size) (pprint-register "reg" symbol size)])
+  (register-value-pass : Register (r) -> * ()
+    [(reg ,symbol) (text (symbol->string symbol))]
+    [(reg ,symbol ,size)
+     (h-append
+      (text (symbol->string symbol))
+      (pprint-size size))])
+  (constant-value-pass : Constant (c) -> * ()
+    [(const ,bitwidth ,baseident ,literal)
+     (h-append
+      (text (number->string bitwidth))
+      squote
+      (text (symbol->string baseident))
+      (text
+       (cond [(number? literal) (number->string literal)]
+             [(symbol? literal) (symbol->string literal)])))])
+  (value-pass : Value (v) -> * ()
+    [,symbol (text (symbol->string symbol))]
+    [,register (register-value-pass register)]
+    [,constant (constant-value-pass constant)]
+    [,memory (text "memory-value")] ;; TODO implement memory value
+    [,input (input-value-pass input)])
+  (register-decl-pass : RegisterDecl (rd) -> * ()
+    [,register (register-pass register)]
+    [(,[register-pass : register] ,[value-pass : value])
+     (hs-append
+      register
+      equals
+      value)])
   (memory-decl-pass : MemoryDecl (md) -> * ()
     [(mem ,symbol ,size0 ,size1)
      (hs-append
       (pprint-register "reg" symbol size0)
       (pprint-size size1))])
   (declaration-pass : Declaration (d) -> * ()
-    [,register (h-append (register-pass register) semi)]
+    [,register-decl (h-append (register-decl-pass register-decl) semi)]
     [,memory-decl (h-append (memory-decl-pass memory-decl) semi)])
   (module-pass : Module (m) -> * ()
     [(,[module-name-pass : doc0]
