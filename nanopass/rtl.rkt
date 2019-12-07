@@ -189,8 +189,10 @@
 (define-pass add-boilerplate : rtl-fsm (ast) -> rtl-fsm ()
   (definitions
     (define (required-size items)
-      (let ([upper (- (exact-ceiling (log (length items) 2)) 1)])
-        (cons upper 0)))
+      (let ([required-bits (exact-ceiling (log (length items) 2))])
+        (if (> required-bits 1)
+            (cons (- required-bits 1) 0)
+            null)))
     (define (clk-port)
       (with-output-language (rtl-fsm Port)
         `(in clk)))
@@ -200,7 +202,9 @@
     (define (operation-port operations)
       (let ([size (required-size operations)])
         (with-output-language (rtl-fsm Port)
-          `(in operation ,size))))
+          (if (empty? size)
+              `(in operation)
+              `(in operation ,size)))))
     (define (busy-port)
       (with-output-language (rtl-fsm Port)
         `(out busy)))
@@ -215,11 +219,15 @@
     (define (state-reg states)
       (let ([size (required-size states)])
         (with-output-language (rtl-fsm Declaration)
-          `(reg state ,size))))
+          (if (empty? size)
+              `(reg state)
+              `(reg state ,size)))))
     (define (next-state-reg states)
       (let ([size (required-size states)])
         (with-output-language (rtl-fsm Declaration)
-          `(reg next_state ,size))))
+          (if (empty? size)
+              `(reg next_state)
+              `(reg next_state ,size)))))
     (define (boilerplate-declarations states)
       (list
        (state-reg states)
@@ -256,10 +264,10 @@
       (,declaration ...)
       (,assign-state ...)
       (,next-state-state ...))
-     (let ([operation-entries (map operation-entry-pass operation-entry)])
+     (let ([operation-entries (map operation-entry-pass operation-entry)]
+           [augmented-state-names (append (boilerplate-state-names) state-name)])
        (let ([augmented-ports (append (boilerplate-ports operation-entries) port)]
-             [augmented-state-names (append (boilerplate-state-names) state-name)]
-             [augmented-declarations (append (boilerplate-declarations state-name) declaration)]
+             [augmented-declarations (append (boilerplate-declarations augmented-state-names) declaration)]
              [augmented-assign-states (append (boilerplate-assign-states) assign-state)]
              [augmented-next-states (append (boilerplate-next-states operation-entries) next-state-state)])
          `(,module-name
@@ -622,11 +630,12 @@
                                   (text "end")))
                          (text "endcase")))
                 (text "end"))))
-      (text "endmodule"))]))
+      (text "endmodule")
+      line)]))
 
 (define adt-to-verilog
   (compose1
-   pretty-print
+   pretty-format
    preprint-to-pprint
    add-default-assigns
    add-boilerplate
