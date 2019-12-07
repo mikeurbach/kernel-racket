@@ -11,10 +11,11 @@
 * Ideas and Questions
 ** Can tighten up the sub-FSM calls?
 ** Easy to share states by hand, but how to automate?
-** How to remove hard-coded bitwidth in literals? (parameters might just be done in intermediate lang)
 ** How will lazy evaluation fit in?
 ** Can operations share ports? (currently they will if they name them the same)
 ** Either check uniqueness of operation/state names or use gensyms or something
+** If there's only one operation, we don't need op selector
+** If the only operation is combinational, we don't need start/busy signals
 * Tasks
 ** TODO design final nanopass language for generating verilog modules
 *** DONE module name
@@ -23,17 +24,17 @@
 **** DONE pass a list of symbols
 **** DONE use length to generate operation input
 **** DONE use list to generate localparams
-**** TODO maybe operations should declare their own input/outputs?
-*** TODO states
-**** TODO state should have: label, assigns, next state logic
-**** TODO maybe this is wrapped as sub state machine per operation (see above)?
-*** TODO registers
+**** DONE maybe operations should declare their own input/outputs? yes.
+*** DONE states
+**** DONE state should have: label, assigns, next state logic
+**** DONE maybe this is wrapped as sub state machine per operation (see above)? yes.
+*** DONE registers
 *** TODO instantiations
-*** TODO next state logic
-*** TODO output/register assignments
+*** DONE next state logic
+*** DONE output/register assignments
 **** Simple register to register
 **** Register to/from memory
 **** Allowed combinatorial operators
-*** TODO parameters
-**** Should this just be bookkeeping we just do? It's only being done for word size...
+*** DONE parameters
+**** Should this just be bookkeeping we just do? It's only being done for word size... yes.
 ** TODO write out pair and environment modules in the new language

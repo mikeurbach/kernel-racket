@@ -1,12 +1,12 @@
 #lang nanopass
 
-(require "rtl.rkt" pprint)
+(require "rtl.rkt")
 
 (define-parser rtl-adt-parser rtl-adt)
 
-;; Pair module full pass
+;; Pair module example
 
-(define pair-adt
+(adt-to-verilog
  (rtl-adt-parser
   '(pair
     ((mem cars (8 . 0) (255 . 0))
@@ -47,27 +47,19 @@
         (((mem cdrs (in pair_in (7 . 0))) (in cdr)))
         init)))))))
 
-((compose1
-  pretty-print
-  preprint-to-pprint
-  add-default-assigns
-  add-boilerplate
-  adt-to-fsm)
- pair-adt)
-
 ;; Basic Assigns
 
 ;;;; Register Target, Register Value
 
-;; (output-rtl
-;;  (rtl-adt-parser
-;;   '(mod
-;;     ()
-;;     ((op1
-;;       ()
-;;       ((s1
-;;         (((reg foo) (reg bar)))
-;;         init)))))))
+(adt-to-verilog
+ (rtl-adt-parser
+  '(mod
+    ()
+    ((op1
+      ()
+      ((s1
+        (((reg foo) (reg bar)))
+        init)))))))
 
 ;; (output-rtl
 ;;  (rtl-adt-parser
