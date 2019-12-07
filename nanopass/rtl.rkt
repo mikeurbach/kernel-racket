@@ -394,7 +394,22 @@
     (define (pprint-binop left op right)
       (cond
         [(equal? (pretty-format op) ",") (hs-append lbrace left op right rbrace)]
-        [else (hs-append left op right)])))
+        [else (hs-append left op right)]))
+    (define (pprint-next-state-case value symbol)
+      (v-append
+       (nest 2 (v-append
+                (hs-append
+                 (h-append
+                  value
+                  colon)
+                 (text "begin"))
+                (h-append
+                 (hs-append
+                  (text "next_state")
+                  equals
+                  (text (symbol->string symbol)))
+                 semi)))
+       (text "end"))))
   (module-name-pass : ModuleName (mn) -> * ()
     [,symbol (text (symbol->string symbol))])
   (input-pass : Input (i) -> * ()
@@ -522,6 +537,46 @@
                 (text "begin"))
                (v-concat doc)))
       (text "end"))])
+  (case-statement-pass : CaseStatement (cs) -> * ()
+    [(case ,[value-pass : doc0] ((,[value-pass : doc1] ,symbol1) ...) ,symbol0)
+     (v-append
+      (nest 2 (v-append
+               (h-append
+                (text "case")
+                lparen
+                doc0
+                rparen)
+               (v-concat (map pprint-next-state-case doc1 symbol1))
+               (v-append
+                (nest 2 (v-append
+                         (text "default: begin")
+                         (h-append
+                          (hs-append
+                           (text "next_state")
+                           equals
+                           (text (symbol->string symbol0)))
+                          semi)))
+                (text "end"))))
+      (text "endcase"))])
+  (next-state-pass : NextState (ns) -> * ()
+    [,symbol
+     (h-append
+      (hs-append
+       (text "next_state")
+       equals
+       (text (symbol->string symbol)))
+      semi)]
+    [,case-statement (case-statement-pass case-statement)])
+  (next-state-state-pass : NextStateState (nss) -> * ()
+    [(,symbol ,[next-state-pass : doc])
+     (v-append
+      (nest 2 (v-append
+               (hs-append
+                (h-append
+                 (text (symbol->string symbol))
+                 colon)
+                (text "begin"))
+               doc)))])
   (module-pass : Module (m) -> * ()
     [(,[module-name-pass : doc0]
       (,[port-pass : doc1] ...)
@@ -530,7 +585,7 @@
       (,[declaration-pass : doc4] ...)
       (,[default-assign-pass : doc5] ...)
       (,[assign-state-pass : doc6] ...)
-      (,next-state-state ...))
+      (,[next-state-state-pass : doc7] ...))
      (v-append
       (nest 2 (v-append
                (hs-append
@@ -554,6 +609,19 @@
                                   (text "case(next_state)")
                                   (v-concat doc6)
                                   (text "default: begin")
+                                  (text "end")))
+                         (text "endcase")))
+                (text "end"))
+               empty
+               (v-append
+                (nest 2 (v-append
+                         (text "always @(start or state) begin")
+                         (nest 2 (v-append
+                                  (text "case(state)")
+                                  (v-concat doc7)
+                                  (nest 2 (v-append
+                                           (text "default: begin")
+                                           (text "next_state = state;")))
                                   (text "end")))
                          (text "endcase")))
                 (text "end"))))
