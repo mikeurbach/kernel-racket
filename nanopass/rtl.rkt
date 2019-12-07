@@ -399,6 +399,8 @@
       (text (symbol->string symbol)))
     (define (numtext number)
       (text (number->string number)))
+    (define (with-semi doc)
+      (h-append doc semi))
 
     (define (pprint-size size)
       (h-append
@@ -416,13 +418,12 @@
             (pprint-size size))
         (symtext name))))
     (define (pprint-localparam symbol counter-proc)
-      (h-append
+      (with-semi
        (hs-append
         localparam
         (symtext symbol)
         equals
-        (numtext (counter-proc)))
-       semi))
+        (numtext (counter-proc)))))
     (define (pprint-binop left op right)
       (cond
         [(equal? (pretty-format op) ",") (hs-append lbrace left op right rbrace)]
@@ -435,12 +436,11 @@
                   value
                   colon)
                  begin)
-                (h-append
+                (with-semi
                  (hs-append
                   next_state
                   equals
-                  (symtext symbol))
-                 semi)))
+                  (symtext symbol)))))
        end)))
 
   (module-name-pass : ModuleName (mn) -> * ()
@@ -517,16 +517,15 @@
       (pprint-register reg symbol size0)
       (pprint-size size1))])
   (declaration-pass : Declaration (d) -> * ()
-    [,register-decl (h-append (register-decl-pass register-decl) semi)]
-    [,memory-decl (h-append (memory-decl-pass memory-decl) semi)])
+    [,register-decl (with-semi (register-decl-pass register-decl))]
+    [,memory-decl (with-semi (memory-decl-pass memory-decl))])
   (default-assign-pass : DefaultAssign (da) -> * ()
     [(,symbol0 . ,symbol1)
-     (h-append
+     (with-semi
       (hs-append
        (symtext symbol0)
        assign
-       (symtext symbol1))
-      semi)])
+       (symtext symbol1)))])
   (target-pass : Target (t) -> * ()
     [,register (register-value-pass register)]
     [,memory (memory-pass memory)]
@@ -537,27 +536,24 @@
     [(op ,binop) (symtext binop)])
   (assign-pass : Assign (a) -> * ()
     [(,[target-pass : doc0] ,[value-pass : doc1])
-     (h-append
+     (with-semi
       (hs-append
        doc0
        assign
-       doc1)
-      semi)]
+       doc1))]
     [(,[target-pass : doc0] ,[unary-op-pass : doc1] ,[value-pass : doc2])
-     (h-append
+     (with-semi
       (hs-append
        doc0
        assign
        doc1
-       doc2)
-      semi)]
+       doc2))]
     [(,[target-pass : doc0] ,[value-pass : doc1] ,[binary-op-pass : doc2] ,[value-pass : doc3])
-     (h-append
+     (with-semi
       (hs-append
        doc0
        assign
-       (pprint-binop doc1 doc2 doc3))
-      semi)])
+       (pprint-binop doc1 doc2 doc3)))])
   (assign-state-pass : AssignState (as) -> * ()
     [(,symbol (,[assign-pass : doc] ...))
      (v-append
@@ -582,22 +578,20 @@
                (v-append
                 (nest 2 (v-append
                          (hs-append (h-append default colon) begin)
-                         (h-append
+                         (with-semi
                           (hs-append
                            next_state
                            equals
-                           (symtext symbol0))
-                          semi)))
+                           (symtext symbol0)))))
                 end)))
       endcase)])
   (next-state-pass : NextState (ns) -> * ()
     [,symbol
-     (h-append
+     (with-semi
       (hs-append
        next_state
        equals
-       (symtext symbol))
-      semi)]
+       (symtext symbol)))]
     [,case-statement (case-statement-pass case-statement)])
   (next-state-state-pass : NextStateState (nss) -> * ()
     [(,symbol ,[next-state-pass : doc])
@@ -625,7 +619,7 @@
                (v-concat
                 (apply-infix comma doc1))))
       (nest 2 (v-append
-               (h-append rparen semi)
+               (with-semi rparen)
                (v-concat doc2)
                empty
                (v-concat doc3)
@@ -653,7 +647,7 @@
                                   (v-concat doc7)
                                   (nest 2 (v-append
                                            (hs-append (h-append default colon) begin)
-                                           (h-append (hs-append next_state equals state) semi)))
+                                           (with-semi (hs-append next_state equals state))))
                                   end))
                          endcase))
                 end)))
