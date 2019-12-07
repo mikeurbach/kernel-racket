@@ -363,6 +363,27 @@
 
 (define-pass preprint-to-pprint : rtl-preprint (ast) -> * ()
   (definitions
+    (define module (text "module"))
+    (define endmodule (text "endmodule"))
+    (define begin (text "begin"))
+    (define end (text "end"))
+    (define case (text "case"))
+    (define endcase (text "endcase"))
+    (define default (text "default"))
+    (define localparam (text "localparam"))
+    (define state (text "state"))
+    (define next_state (text "next_state"))
+    (define always (text "always"))
+    (define at (text "@"))
+    (define or (text "or"))
+    (define posedge (text "posedge"))
+    (define clk (text "clk"))
+    (define start (text "start"))
+    (define assign (text "<="))
+    (define input (text "input"))
+    (define output-reg (text "output reg"))
+    (define reg (text "reg"))
+
     (define op-counter
       (let ([counter -1])
         (lambda ()
@@ -373,10 +394,12 @@
         (lambda ()
           (set! counter (+ 1 counter))
           counter)))
+
     (define (symtext symbol)
       (text (symbol->string symbol)))
     (define (numtext number)
       (text (number->string number)))
+
     (define (pprint-size size)
       (h-append
        lbracket
@@ -387,7 +410,7 @@
     (define (pprint-register type name size)
       (h-append
        (hs-append
-        (text type)
+        type
         (if (empty? size)
             empty
             (pprint-size size))
@@ -395,7 +418,7 @@
     (define (pprint-localparam symbol counter-proc)
       (h-append
        (hs-append
-        (text "localparam")
+        localparam
         (symtext symbol)
         equals
         (numtext (counter-proc)))
@@ -411,19 +434,20 @@
                  (h-append
                   value
                   colon)
-                 (text "begin"))
+                 begin)
                 (h-append
                  (hs-append
-                  (text "next_state")
+                  next_state
                   equals
                   (symtext symbol))
                  semi)))
-       (text "end"))))
+       end)))
+
   (module-name-pass : ModuleName (mn) -> * ()
     [,symbol (symtext symbol)])
   (input-pass : Input (i) -> * ()
-    [(in ,symbol) (pprint-register "input" symbol null)]
-    [(in ,symbol ,size) (pprint-register "input" symbol size)])
+    [(in ,symbol) (pprint-register input symbol null)]
+    [(in ,symbol ,size) (pprint-register input symbol size)])
   (input-value-pass : Input (i) -> * ()
     [(in ,symbol) (symtext symbol)]
     [(in ,symbol ,size)
@@ -431,8 +455,8 @@
       (symtext symbol)
       (pprint-size size))])
   (output-pass : Output (i) -> * ()
-    [(out ,symbol) (pprint-register "output reg" symbol null)]
-    [(out ,symbol ,size) (pprint-register "output reg" symbol size)])
+    [(out ,symbol) (pprint-register output-reg symbol null)]
+    [(out ,symbol ,size) (pprint-register output-reg symbol size)])
   (output-value-pass : Output (o) -> * ()
     [(out ,symbol) (symtext symbol)]
     [(out ,symbol ,size)
@@ -447,8 +471,8 @@
   (state-name-pass : StateName (sn) -> * ()
     [,symbol (pprint-localparam symbol state-counter)])
   (register-pass : Register (r) -> * ()
-    [(reg ,symbol) (pprint-register "reg" symbol null)]
-    [(reg ,symbol ,size) (pprint-register "reg" symbol size)])
+    [(reg ,symbol) (pprint-register reg symbol null)]
+    [(reg ,symbol ,size) (pprint-register reg symbol size)])
   (register-value-pass : Register (r) -> * ()
     [(reg ,symbol) (symtext symbol)]
     [(reg ,symbol ,size)
@@ -461,9 +485,8 @@
       (numtext bitwidth)
       squote
       (symtext baseident)
-      (text
-       (cond [(number? literal) (number->string literal)]
-             [(symbol? literal) (symbol->string literal)])))])
+      (cond [(number? literal) (numtext literal)]
+            [(symbol? literal) (symtext literal)]))])
   (memory-ref-pass : MemoryRef (mr) -> * ()
     [,register (register-value-pass register)]
     [,constant (constant-pass constant)]
@@ -491,7 +514,7 @@
   (memory-decl-pass : MemoryDecl (md) -> * ()
     [(mem ,symbol ,size0 ,size1)
      (hs-append
-      (pprint-register "reg" symbol size0)
+      (pprint-register reg symbol size0)
       (pprint-size size1))])
   (declaration-pass : Declaration (d) -> * ()
     [,register-decl (h-append (register-decl-pass register-decl) semi)]
@@ -501,7 +524,7 @@
      (h-append
       (hs-append
        (symtext symbol0)
-       (text "<=")
+       assign
        (symtext symbol1))
       semi)])
   (target-pass : Target (t) -> * ()
@@ -517,14 +540,14 @@
      (h-append
       (hs-append
        doc0
-       (text "<=")
+       assign
        doc1)
       semi)]
     [(,[target-pass : doc0] ,[unary-op-pass : doc1] ,[value-pass : doc2])
      (h-append
       (hs-append
        doc0
-       (text "<=")
+       assign
        doc1
        doc2)
       semi)]
@@ -532,7 +555,7 @@
      (h-append
       (hs-append
        doc0
-       (text "<=")
+       assign
        (pprint-binop doc1 doc2 doc3))
       semi)])
   (assign-state-pass : AssignState (as) -> * ()
@@ -543,35 +566,35 @@
                 (h-append
                  (symtext symbol)
                  colon)
-                (text "begin"))
+                begin)
                (v-concat doc)))
-      (text "end"))])
+      end)])
   (case-statement-pass : CaseStatement (cs) -> * ()
     [(case ,[value-pass : doc0] ((,[value-pass : doc1] ,symbol1) ...) ,symbol0)
      (v-append
       (nest 2 (v-append
                (h-append
-                (text "case")
+                case
                 lparen
                 doc0
                 rparen)
                (v-concat (map pprint-next-state-case doc1 symbol1))
                (v-append
                 (nest 2 (v-append
-                         (text "default: begin")
+                         (hs-append (h-append default colon) begin)
                          (h-append
                           (hs-append
-                           (text "next_state")
+                           next_state
                            equals
                            (symtext symbol0))
                           semi)))
-                (text "end"))))
-      (text "endcase"))])
+                end)))
+      endcase)])
   (next-state-pass : NextState (ns) -> * ()
     [,symbol
      (h-append
       (hs-append
-       (text "next_state")
+       next_state
        equals
        (symtext symbol))
       semi)]
@@ -584,7 +607,7 @@
                 (h-append
                  (symtext symbol)
                  colon)
-                (text "begin"))
+                begin)
                doc)))])
   (module-pass : Module (m) -> * ()
     [(,[module-name-pass : doc0]
@@ -598,11 +621,11 @@
      (v-append
       (nest 2 (v-append
                (hs-append
-                (text "module") doc0 (text "("))
+                module doc0 lparen)
                (v-concat
-                (apply-infix (text ",") doc1))))
+                (apply-infix comma doc1))))
       (nest 2 (v-append
-               (text ");")
+               (h-append rparen semi)
                (v-concat doc2)
                empty
                (v-concat doc3)
@@ -611,30 +634,30 @@
                empty
                (v-append
                 (nest 2 (v-append
-                         (text "always @(posedge clk) begin")
+                         (hs-append always (h-append at lparen (hs-append posedge clk) rparen) begin)
                          (v-concat doc5)
                          empty
                          (nest 2 (v-append
-                                  (text "case(next_state)")
+                                  (h-append case lparen next_state rparen)
                                   (v-concat doc6)
-                                  (text "default: begin")
-                                  (text "end")))
-                         (text "endcase")))
-                (text "end"))
+                                  (hs-append (h-append default colon) begin)
+                                  end))
+                         endcase))
+                end)
                empty
                (v-append
                 (nest 2 (v-append
-                         (text "always @(start or state) begin")
+                         (hs-append always (h-append at lparen (hs-append start or state) rparen) begin)
                          (nest 2 (v-append
-                                  (text "case(state)")
+                                  (h-append case lparen state rparen)
                                   (v-concat doc7)
                                   (nest 2 (v-append
-                                           (text "default: begin")
-                                           (text "next_state = state;")))
-                                  (text "end")))
-                         (text "endcase")))
-                (text "end"))))
-      (text "endmodule")
+                                           (hs-append (h-append default colon) begin)
+                                           (h-append (hs-append next_state equals state) semi)))
+                                  end))
+                         endcase))
+                end)))
+      endmodule
       line)]))
 
 (define adt-to-verilog
