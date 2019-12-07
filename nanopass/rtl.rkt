@@ -390,7 +390,11 @@
         (text (symbol->string symbol))
         equals
         (text (number->string (counter-proc))))
-       semi)))
+       semi))
+    (define (pprint-binop left op right)
+      (cond
+        [(equal? (pretty-format op) ",") (hs-append lbrace left op right rbrace)]
+        [else (hs-append left op right)])))
   (module-name-pass : ModuleName (mn) -> * ()
     [,symbol (text (symbol->string symbol))])
   (input-pass : Input (i) -> * ()
@@ -443,8 +447,10 @@
   (memory-pass : Memory (m) -> * ()
     [(mem ,symbol ,[memory-ref-pass : doc])
      (h-append
-      symbol
-      doc)])
+      (text (symbol->string symbol))
+      lbracket
+      doc
+      rbracket)])
   (value-pass : Value (v) -> * ()
     [,symbol (text (symbol->string symbol))]
     [,register (register-value-pass register)]
@@ -474,6 +480,48 @@
        (text "<=")
        (text (symbol->string symbol1)))
       semi)])
+  (target-pass : Target (t) -> * ()
+    [,register (register-value-pass register)]
+    [,memory (memory-pass memory)]
+    [,output (output-value-pass output)])
+  (unary-op-pass : UnaryOp (uo) -> * ()
+    [(op ,unop) (text (symbol->string unop))])
+  (binary-op-pass : BinaryOp (bo) -> * ()
+    [(op ,binop) (text (symbol->string binop))])
+  (assign-pass : Assign (a) -> * ()
+    [(,[target-pass : doc0] ,[value-pass : doc1])
+     (h-append
+      (hs-append
+       doc0
+       (text "<=")
+       doc1)
+      semi)]
+    [(,[target-pass : doc0] ,[unary-op-pass : doc1] ,[value-pass : doc2])
+     (h-append
+      (hs-append
+       doc0
+       (text "<=")
+       doc1
+       doc2)
+      semi)]
+    [(,[target-pass : doc0] ,[value-pass : doc1] ,[binary-op-pass : doc2] ,[value-pass : doc3])
+     (h-append
+      (hs-append
+       doc0
+       (text "<=")
+       (pprint-binop doc1 doc2 doc3))
+      semi)])
+  (assign-state-pass : AssignState (as) -> * ()
+    [(,symbol (,[assign-pass : doc] ...))
+     (v-append
+      (nest 2 (v-append
+               (hs-append
+                (h-append
+                 (text (symbol->string symbol))
+                 colon)
+                (text "begin"))
+               (v-concat doc)))
+      (text "end"))])
   (module-pass : Module (m) -> * ()
     [(,[module-name-pass : doc0]
       (,[port-pass : doc1] ...)
@@ -481,7 +529,7 @@
       (,[state-name-pass : doc3] ...)
       (,[declaration-pass : doc4] ...)
       (,[default-assign-pass : doc5] ...)
-      (,assign-state ...)
+      (,[assign-state-pass : doc6] ...)
       (,next-state-state ...))
      (v-append
       (nest 2 (v-append
@@ -500,7 +548,14 @@
                (v-append
                 (nest 2 (v-append
                          (text "always @(posedge clk) begin")
-                         (v-concat doc5)))
+                         (v-concat doc5)
+                         empty
+                         (nest 2 (v-append
+                                  (text "case(next_state)")
+                                  (v-concat doc6)
+                                  (text "default: begin")
+                                  (text "end")))
+                         (text "endcase")))
                 (text "end"))))
       (text "endmodule"))]))
 
