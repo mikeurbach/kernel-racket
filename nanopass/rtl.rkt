@@ -451,18 +451,14 @@
   (input-value-pass : Input (i) -> * ()
     [(in ,symbol) (symtext symbol)]
     [(in ,symbol ,size)
-     (h-append
-      (symtext symbol)
-      (pprint-size size))])
+     (h-append (symtext symbol) (pprint-size size))])
   (output-pass : Output (i) -> * ()
     [(out ,symbol) (pprint-register output-reg symbol null)]
     [(out ,symbol ,size) (pprint-register output-reg symbol size)])
   (output-value-pass : Output (o) -> * ()
     [(out ,symbol) (symtext symbol)]
     [(out ,symbol ,size)
-     (h-append
-      (symtext symbol)
-      (pprint-size size))])
+     (h-append (symtext symbol) (pprint-size size))])
   (port-pass : Port (p) -> * ()
     [,input (input-pass input)]
     [,output (output-pass output)])
@@ -476,28 +472,19 @@
   (register-value-pass : Register (r) -> * ()
     [(reg ,symbol) (symtext symbol)]
     [(reg ,symbol ,size)
-     (h-append
-      (symtext symbol)
-      (pprint-size size))])
+     (h-append (symtext symbol) (pprint-size size))])
   (constant-pass : Constant (c) -> * ()
     [(const ,bitwidth ,baseident ,literal)
-     (h-append
-      (numtext bitwidth)
-      squote
-      (symtext baseident)
-      (cond [(number? literal) (numtext literal)]
-            [(symbol? literal) (symtext literal)]))])
+     (h-append (numtext bitwidth) squote (symtext baseident)
+               (cond [(number? literal) (numtext literal)]
+                     [(symbol? literal) (symtext literal)]))])
   (memory-ref-pass : MemoryRef (mr) -> * ()
     [,register (register-value-pass register)]
     [,constant (constant-pass constant)]
     [,input (input-value-pass input)])
   (memory-pass : Memory (m) -> * ()
     [(mem ,symbol ,[memory-ref-pass : doc])
-     (h-append
-      (symtext symbol)
-      lbracket
-      doc
-      rbracket)])
+     (h-append (symtext symbol) lbracket doc rbracket)])
   (value-pass : Value (v) -> * ()
     [,symbol (symtext symbol)]
     [,register (register-value-pass register)]
@@ -507,25 +494,16 @@
   (register-decl-pass : RegisterDecl (rd) -> * ()
     [,register (register-pass register)]
     [(,[register-pass : register] ,[value-pass : value])
-     (hs-append
-      register
-      equals
-      value)])
+     (hs-append register equals value)])
   (memory-decl-pass : MemoryDecl (md) -> * ()
     [(mem ,symbol ,size0 ,size1)
-     (hs-append
-      (pprint-register reg symbol size0)
-      (pprint-size size1))])
+     (hs-append (pprint-register reg symbol size0) (pprint-size size1))])
   (declaration-pass : Declaration (d) -> * ()
     [,register-decl (with-semi (register-decl-pass register-decl))]
     [,memory-decl (with-semi (memory-decl-pass memory-decl))])
   (default-assign-pass : DefaultAssign (da) -> * ()
     [(,symbol0 . ,symbol1)
-     (with-semi
-      (hs-append
-       (symtext symbol0)
-       assign
-       (symtext symbol1)))])
+     (with-semi (hs-append (symtext symbol0) assign (symtext symbol1)))])
   (target-pass : Target (t) -> * ()
     [,register (register-value-pass register)]
     [,memory (memory-pass memory)]
@@ -536,33 +514,16 @@
     [(op ,binop) (symtext binop)])
   (assign-pass : Assign (a) -> * ()
     [(,[target-pass : doc0] ,[value-pass : doc1])
-     (with-semi
-      (hs-append
-       doc0
-       assign
-       doc1))]
+     (with-semi (hs-append doc0 assign doc1))]
     [(,[target-pass : doc0] ,[unary-op-pass : doc1] ,[value-pass : doc2])
-     (with-semi
-      (hs-append
-       doc0
-       assign
-       doc1
-       doc2))]
+     (with-semi (hs-append doc0 assign doc1 doc2))]
     [(,[target-pass : doc0] ,[value-pass : doc1] ,[binary-op-pass : doc2] ,[value-pass : doc3])
-     (with-semi
-      (hs-append
-       doc0
-       assign
-       (pprint-binop doc1 doc2 doc3)))])
+     (with-semi (hs-append doc0 assign (pprint-binop doc1 doc2 doc3)))])
   (assign-state-pass : AssignState (as) -> * ()
     [(,symbol (,[assign-pass : doc] ...))
      (v-append
       (nest 2 (v-append
-               (hs-append
-                (h-append
-                 (symtext symbol)
-                 colon)
-                begin)
+               (hs-append (h-append (symtext symbol) colon) begin)
                (v-concat doc)))
       end)])
   (case-statement-pass : CaseStatement (cs) -> * ()
@@ -578,30 +539,18 @@
                (v-append
                 (nest 2 (v-append
                          (hs-append (h-append default colon) begin)
-                         (with-semi
-                          (hs-append
-                           next_state
-                           equals
-                           (symtext symbol0)))))
+                         (with-semi (hs-append next_state equals (symtext symbol0)))))
                 end)))
       endcase)])
   (next-state-pass : NextState (ns) -> * ()
     [,symbol
-     (with-semi
-      (hs-append
-       next_state
-       equals
-       (symtext symbol)))]
+     (with-semi (hs-append next_state equals (symtext symbol)))]
     [,case-statement (case-statement-pass case-statement)])
   (next-state-state-pass : NextStateState (nss) -> * ()
     [(,symbol ,[next-state-pass : doc])
      (v-append
       (nest 2 (v-append
-               (hs-append
-                (h-append
-                 (symtext symbol)
-                 colon)
-                begin)
+               (hs-append (h-append (symtext symbol) colon) begin)
                doc)))])
   (module-pass : Module (m) -> * ()
     [(,[module-name-pass : doc0]
@@ -614,10 +563,8 @@
       (,[next-state-state-pass : doc7] ...))
      (v-append
       (nest 2 (v-append
-               (hs-append
-                module doc0 lparen)
-               (v-concat
-                (apply-infix comma doc1))))
+               (hs-append module doc0 lparen)
+               (v-concat (apply-infix comma doc1))))
       (nest 2 (v-append
                (with-semi rparen)
                (v-concat doc2)
