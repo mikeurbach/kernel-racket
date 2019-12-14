@@ -48,6 +48,39 @@
          (((mem cdrs (in pair_in (7 . 0))) (in cdr)))
          init))))))))
 
+;; Environment module example
+(display
+ (adt-to-verilog
+  (rtl-parser
+   '(environment
+     ((reg env_ref (8 . 0))
+      (reg list_ref (8 . 0))
+      (reg tuple_ref (8 . 0))
+      (mod pair pair_instance))
+     ()))))
+     ;; (new
+     ;;  ((in env_in (8 . 0))
+     ;;   (out env_out (8 . 0)))
+     ;;  ((alloc
+     ;;    (((mod pair) (op cons) (const 9 h 100) (in env_in) (out env_out)))
+     ;;    init)))
+     ;; (bind
+     ;;  ((in env_in (8 . 0))
+     ;;   (in symbol (8 . 0))
+     ;;   (in value (8 . 0)))
+     ;;  ((alloc_tuple
+     ;;    (((mod pair_instance) (op cons) (in symbol) (in value) (reg tuple_ref)))
+     ;;    (continue load_car))
+     ;;   (load_car
+     ;;    (((mod pair_instance) (op car) (in env_in) (reg list_ref)))
+     ;;    (continue alloc_list))
+     ;;   (alloc_list
+     ;;    (((mod pair_instance) (op cons) (reg tuple_ref) (reg list_ref)))
+     ;;    (continue update_car))
+     ;;   (update_car
+     ;;    (((mod pair_instance) (op set_car) (reg env_in) (reg list_ref)))
+     ;;    init)))
+
 ;; Basic Assigns
 
 ;;;; Register Target, Register Value
