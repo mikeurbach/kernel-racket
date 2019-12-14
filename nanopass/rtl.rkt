@@ -4,7 +4,10 @@
 
 (provide
  rtl0
- adt-to-verilog)
+ adt-to-verilog
+ module-table)
+
+(define module-table (make-hash))
 
 (define (size? e)
   (and (pair? e)
@@ -345,6 +348,40 @@
          (,declaration ...)
          (,default-assign ...)
          (,operation ...)))]))
+
+(define-pass store-module-signature! : rtl4 (ast) -> rtl4 ()
+  (definitions
+    (define (extract-ports ports)
+      (for/list ([port ports])
+        (nanopass-case (rtl4 Port) port
+          [(in ,symbol) `(in ,symbol)]
+          [(in ,symbol ,size) `(in ,symbol ,size)]
+          [(out ,symbol) `(out ,symbol)]
+          [(out ,symbol ,size) `(out ,symbol ,size)])))
+    (define (extract-operations operations)
+      (for/hash ([operation operations])
+        (nanopass-case (rtl4 Operation) operation
+          [(,symbol (,port ...) (,state ...))
+           (values symbol (extract-ports port))]))))
+  (module-pass : Module (mo) -> Module ()
+    [(,module-name
+      (,port ...)
+      (,operation-entry ...)
+      (,state-name ...)
+      (,declaration ...)
+      (,default-assign ...)
+      (,operation ...))
+     (let ([ports (extract-ports port)]
+           [operations (extract-operations operation)])
+       (let ([module-entry (hash 'ports ports 'operations operations)])
+         (hash-set! module-table module-name module-entry)
+         `(,module-name
+           (,port ...)
+           (,operation-entry ...)
+           (,state-name ...)
+           (,declaration ...)
+           (,default-assign ...)
+           (,operation ...))))]))
 
 (define-language rtl5
   (extends rtl4)
@@ -720,6 +757,7 @@
    rtl-to-pprint
    add-boilerplate-states
    split-states
+   store-module-signature!
    add-boilerplate-ports
    add-default-assigns
    add-state-names
