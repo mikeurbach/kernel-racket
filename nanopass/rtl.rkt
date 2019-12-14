@@ -392,16 +392,18 @@
 (define-language rtl5
   (extends rtl4)
   (WireRef (wire-ref)
-   ( + (wire symbol)
-       (wire symbol size)))
+    ( + (wire symbol)
+        (wire symbol size)))
   (PortTarget (port-target)
-   ( + register
-       wire-ref))
+    ( + register
+        wire-ref))
   (PortBinding (port-binding)
     ( + (port port-target)))
   (ModuleDecl (module-decl)
     ( - (mod symbol0 symbol1))
-    ( + (mod symbol0 symbol1 (port-binding ...)))))
+    ( + (mod symbol0 symbol1 (port-binding ...))))
+  (Declaration (declaration)
+    ( + wire-ref)))
 
 (define-pass add-module-port-bindings : rtl4 (ast) -> rtl5 ()
   (definitions
@@ -451,6 +453,37 @@
        (let ([module-ports (hash-ref module-signature 'ports)])
          (let ([port-bindings (build-port-bindings symbol1 module-ports)])
            `(mod ,symbol0 ,symbol1 (,port-bindings ...)))))]))
+
+(define-pass add-port-binding-declarations : rtl5 (ast) -> rtl5 ()
+  (definitions
+    (define (extract-port-targets port-bindings)
+      (for/list ([port-binding port-bindings])
+        (nanopass-case (rtl5 PortBinding) port-binding
+          [(,port ,port-target) port-target])))
+    (define (extract-port-bindings declaration)
+      (nanopass-case (rtl5 Declaration) declaration
+        [(mod ,symbol0 ,symbol1 (,port-binding ...)) (extract-port-targets port-binding)]
+        [else null]))
+    (define (build-port-binding-declarations declarations)
+      (flatten
+       (for/list ([declaration declarations])
+         (list* declaration (extract-port-bindings declaration))))))
+  (module-pass : Module (m) -> Module ()
+    [(,module-name
+      (,port ...)
+      (,operation-entry ...)
+      (,state-name ...)
+      (,declaration ...)
+      (,default-assign ...)
+      (,operation ...))
+     (let ([augmented-declarations (build-port-binding-declarations declaration)])
+       `(,module-name
+         (,port ...)
+         (,operation-entry ...)
+         (,state-name ...)
+         (,augmented-declarations ...)
+         (,default-assign ...)
+         (,operation ...)))]))
 
 (define-language rtl6
   (extends rtl5)
@@ -602,6 +635,7 @@
     (define input (text "input"))
     (define output-reg (text "output reg"))
     (define reg (text "reg"))
+    (define wire (text "wire"))
 
     (define op-counter
       (let ([counter -1])
@@ -704,6 +738,9 @@
   (register-name-pass : Register (r) -> * ()
     [(reg ,symbol) (symtext symbol)]
     [(reg ,symbol ,size) (symtext symbol)])
+  (wire-ref-pass : WireRef (w) -> * ()
+    [(wire ,symbol) (pprint-register wire symbol null)]
+    [(wire ,symbol ,size) (pprint-register wire symbol size)])
   (wire-ref-name-pass : WireRef (w) -> * ()
     [(wire ,symbol) (symtext symbol)]
     [(wire ,symbol ,size) (symtext symbol)])
@@ -748,6 +785,7 @@
       rparen)])
   (declaration-pass : Declaration (d) -> * ()
     [,register-decl (with-semi (register-decl-pass register-decl))]
+    [,wire-ref (with-semi (wire-ref-pass wire-ref))]
     [,memory-decl (with-semi (memory-decl-pass memory-decl))]
     [,module-decl (with-semi (module-decl-pass module-decl))])
   (default-assign-pass : DefaultAssign (da) -> * ()
@@ -856,6 +894,7 @@
    rtl-to-pprint
    add-boilerplate-states
    split-states
+   add-port-binding-declarations
    add-module-port-bindings
    store-module-signature!
    add-boilerplate-ports
