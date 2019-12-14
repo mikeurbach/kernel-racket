@@ -223,10 +223,8 @@
 
 (define-language rtl4
   (extends rtl3)
-  (AssignState (assign-state)
-    (+ (symbol (assign ...))))
-  (NextStateState (next-state-state)
-    (+ (symbol next-state)))
+  (DefaultAssign (default-assign)
+   (+ (symbol0 . symbol1)))
   (Module (module)
     (- (module-name
         (port ...)
@@ -239,24 +237,107 @@
         (operation-entry ...)
         (state-name ...)
         (declaration ...)
+        (default-assign ...)
+        (operation ...)))))
+
+(define-pass add-default-assigns : rtl3 (ast) -> rtl4 ()
+  (definitions
+    (define defaults
+      (with-output-language (rtl4 DefaultAssign)
+        (list
+         `(state . next_state))))
+    (define system-registers
+      (set 'state 'next_state))
+    (define (output? e)
+      (nanopass-case (rtl4 Port) e
+        [(out ,symbol) #t]
+        [(out ,symbol ,size) #t]
+        [else #f]))
+    (define (register? e)
+      (nanopass-case (rtl4 Declaration) e
+        [(reg ,symbol) (not (set-member? system-registers symbol))]
+        [(reg ,symbol ,size) (not (set-member? system-registers symbol))]
+        [((reg ,symbol) ,value) (not (set-member? system-registers symbol))]
+        [((reg ,symbol ,size) ,value) (not (set-member? system-registers symbol))]
+        [else #f]))
+    (define (extract-output e)
+      (nanopass-case (rtl4 Port) e
+        [(out ,symbol)
+         (with-output-language (rtl4 DefaultAssign)
+           `(,symbol . ,symbol))]
+        [(out ,symbol ,size)
+         (with-output-language (rtl4 DefaultAssign)
+           `(,symbol . ,symbol))]))
+    (define (extract-register e)
+      (nanopass-case (rtl4 Declaration) e
+        [(reg ,symbol)
+         (with-output-language (rtl4 DefaultAssign)
+           `(,symbol . ,symbol))]
+        [(reg ,symbol ,size)
+         (with-output-language (rtl4 DefaultAssign)
+           `(,symbol . ,symbol))]
+        [((reg ,symbol) ,value)
+         (with-output-language (rtl4 DefaultAssign)
+           `(,symbol . ,symbol))]
+        [((reg ,symbol ,size) ,value)
+         (with-output-language (rtl4 DefaultAssign)
+           `(,symbol . ,symbol))])))
+  (module-pass : Module (mo) -> Module ()
+    [(,[module-name]
+      (,[port] ...)
+      (,[operation-entry] ...)
+      (,[state-name] ...)
+      (,[declaration] ...)
+      (,[operation] ...))
+     (let ([outputs (map extract-output (filter output? port))]
+           [registers (map extract-register (filter register? declaration))])
+       (let ([default-assigns (append defaults outputs registers)])
+         `(,module-name
+           (,port ...)
+           (,operation-entry ...)
+           (,state-name ...)
+           (,declaration ...)
+           (,default-assigns ...)
+           (,operation ...))))]))
+
+(define-language rtl5
+  (extends rtl4)
+  (AssignState (assign-state)
+    (+ (symbol (assign ...))))
+  (NextStateState (next-state-state)
+    (+ (symbol next-state)))
+  (Module (module)
+    (- (module-name
+        (port ...)
+        (operation-entry ...)
+        (state-name ...)
+        (declaration ...)
+        (default-assign ...)
+        (operation ...)))
+    (+ (module-name
+        (port ...)
+        (operation-entry ...)
+        (state-name ...)
+        (declaration ...)
+        (default-assign ...)
         (assign-state ...)
         (next-state-state ...)))))
 
-(define-pass split-states : rtl3 (ast) -> rtl4 ()
+(define-pass split-states : rtl4 (ast) -> rtl5 ()
   (definitions
     (define (extract-state-pairs operations)
       (apply append
        (for/list ([operation operations])
-        (nanopass-case (rtl4 Operation) operation
+        (nanopass-case (rtl5 Operation) operation
           [(,symbol (,port ...) (,state ...))
            (for/list ([state state])
-             (nanopass-case (rtl4 State) state
+             (nanopass-case (rtl5 State) state
                [(,symbol (,assign ...) ,next-state)
                 (let ([assign-state
-                       (with-output-language (rtl4 AssignState)
+                       (with-output-language (rtl5 AssignState)
                          `(,symbol (,assign ...)))]
                       [next-state-state
-                       (with-output-language (rtl4 NextStateState)
+                       (with-output-language (rtl5 NextStateState)
                          `(,symbol ,next-state))])
                   (cons assign-state next-state-state))]))])))))
   (module-pass : Module (mo) -> Module ()
@@ -265,6 +346,7 @@
       (,[operation-entry] ...)
       (,[state-name] ...)
       (,[declaration] ...)
+      (,[default-assign] ...)
       (,[operation] ...))
      (let ([state-pairs (extract-state-pairs operation)])
        (let ([assign-states (map car state-pairs)]
@@ -274,10 +356,11 @@
            (,operation-entry ...)
            (,state-name ...)
            (,declaration ...)
+           (,default-assign ...)
            (,assign-states ...)
            (,next-state-states ...))))]))
 
-(define-pass add-boilerplate : rtl4 (ast) -> rtl4 ()
+(define-pass add-boilerplate : rtl5 (ast) -> rtl5 ()
   (definitions
     (define (required-size items)
       (let ([required-bits (exact-ceiling (log (length items) 2))])
@@ -285,19 +368,19 @@
             (cons (- required-bits 1) 0)
             null)))
     (define (clk-port)
-      (with-output-language (rtl4 Port)
+      (with-output-language (rtl5 Port)
         `(in clk)))
     (define (start-port)
-      (with-output-language (rtl4 Port)
+      (with-output-language (rtl5 Port)
         `(in start)))
     (define (operation-port operations)
       (let ([size (required-size operations)])
-        (with-output-language (rtl4 Port)
+        (with-output-language (rtl5 Port)
           (if (empty? size)
               `(in operation)
               `(in operation ,size)))))
     (define (busy-port)
-      (with-output-language (rtl4 Port)
+      (with-output-language (rtl5 Port)
         `(out busy)))
     (define (boilerplate-ports operations)
       (list
@@ -309,13 +392,13 @@
       '(init op_case))
     (define (state-reg states)
       (let ([size (required-size states)])
-        (with-output-language (rtl4 Declaration)
+        (with-output-language (rtl5 Declaration)
           (if (empty? size)
               `(reg state)
               `(reg state ,size)))))
     (define (next-state-reg states)
       (let ([size (required-size states)])
-        (with-output-language (rtl4 Declaration)
+        (with-output-language (rtl5 Declaration)
           (if (empty? size)
               `(reg next_state)
               `(reg next_state ,size)))))
@@ -324,22 +407,22 @@
        (state-reg states)
        (next-state-reg states)))
     (define (init-assign)
-      (with-output-language (rtl4 AssignState)
+      (with-output-language (rtl5 AssignState)
         `(init (((reg busy) (const 1 b 0))))))
     (define (op-case-assign)
-      (with-output-language (rtl4 AssignState)
+      (with-output-language (rtl5 AssignState)
         `(op_case (((reg busy) (const 1 b 1))))))
     (define (boilerplate-assign-states)
       (list
        (init-assign)
        (op-case-assign)))
     (define (init-next-state)
-      (with-output-language (rtl4 NextStateState)
+      (with-output-language (rtl5 NextStateState)
         `(init (case (reg start) (((const 1 b 1) op_case)) init))))
     (define (op-case-next-state operation-entries)
       (let ([case-values (map car operation-entries)]
             [case-labels (map cdr operation-entries)])
-        (with-output-language (rtl4 NextStateState)
+        (with-output-language (rtl5 NextStateState)
           `(op_case (case (in operation) ((,case-values ,case-labels) ...) init)))))
     (define (boilerplate-next-states operation-entries)
       (list
@@ -353,6 +436,7 @@
       (,operation-entry ...)
       (,state-name ...)
       (,declaration ...)
+      (,default-assign ...)
       (,assign-state ...)
       (,next-state-state ...))
      (let ([operation-entries (map operation-entry-pass operation-entry)]
@@ -366,91 +450,9 @@
            (,operation-entry ...)
            (,augmented-state-names ...)
            (,augmented-declarations ...)
+           (,default-assign ...)
            (,augmented-assign-states ...)
            (,augmented-next-states ...))))]))
-
-(define-language rtl5
-  (extends rtl4)
-  (DefaultAssign (default-assign)
-   (+ (symbol0 . symbol1)))
-  (Module (module)
-    (- (module-name
-        (port ...)
-        (operation-entry ...)
-        (state-name ...)
-        (declaration ...)
-        (assign-state ...)
-        (next-state-state ...)))
-    (+ (module-name
-        (port ...)
-        (operation-entry ...)
-        (state-name ...)
-        (declaration ...)
-        (default-assign ...)
-        (assign-state ...)
-        (next-state-state ...)))))
-
-(define-pass add-default-assigns : rtl4 (ast) -> rtl5 ()
-  (definitions
-    (define defaults
-      (with-output-language (rtl5 DefaultAssign)
-        (list
-         `(state . next_state))))
-    (define system-registers
-      (set 'state 'next_state))
-    (define (output? e)
-      (nanopass-case (rtl5 Port) e
-        [(out ,symbol) #t]
-        [(out ,symbol ,size) #t]
-        [else #f]))
-    (define (register? e)
-      (nanopass-case (rtl5 Declaration) e
-        [(reg ,symbol) (not (set-member? system-registers symbol))]
-        [(reg ,symbol ,size) (not (set-member? system-registers symbol))]
-        [((reg ,symbol) ,value) (not (set-member? system-registers symbol))]
-        [((reg ,symbol ,size) ,value) (not (set-member? system-registers symbol))]
-        [else #f]))
-    (define (extract-output e)
-      (nanopass-case (rtl5 Port) e
-        [(out ,symbol)
-         (with-output-language (rtl5 DefaultAssign)
-           `(,symbol . ,symbol))]
-        [(out ,symbol ,size)
-         (with-output-language (rtl5 DefaultAssign)
-           `(,symbol . ,symbol))]))
-    (define (extract-register e)
-      (nanopass-case (rtl5 Declaration) e
-        [(reg ,symbol)
-         (with-output-language (rtl5 DefaultAssign)
-           `(,symbol . ,symbol))]
-        [(reg ,symbol ,size)
-         (with-output-language (rtl5 DefaultAssign)
-           `(,symbol . ,symbol))]
-        [((reg ,symbol) ,value)
-         (with-output-language (rtl5 DefaultAssign)
-           `(,symbol . ,symbol))]
-        [((reg ,symbol ,size) ,value)
-         (with-output-language (rtl5 DefaultAssign)
-           `(,symbol . ,symbol))])))
-  (module-pass : Module (mo) -> Module ()
-    [(,[module-name]
-      (,[port] ...)
-      (,[operation-entry] ...)
-      (,[state-name] ...)
-      (,[declaration] ...)
-      (,[assign-state] ...)
-      (,[next-state-state] ...))
-     (let ([outputs (map extract-output (filter output? port))]
-           [registers (map extract-register (filter register? declaration))])
-       (let ([default-assigns (append defaults outputs registers)])
-         `(,module-name
-           (,port ...)
-           (,operation-entry ...)
-           (,state-name ...)
-           (,declaration ...)
-           (,default-assigns ...)
-           (,assign-state ...)
-           (,next-state-state ...))))]))
 
 (define-pass rtl-to-pprint : rtl5 (ast) -> * ()
   (definitions
@@ -696,9 +698,9 @@
   (compose1
    pretty-format
    rtl-to-pprint
-   add-default-assigns
    add-boilerplate
    split-states
+   add-default-assigns
    add-state-names
    add-operation-entries
    add-ports))
