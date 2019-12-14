@@ -40,6 +40,12 @@
 (define (binary-op? e)
   (set-member? binary-ops e))
 
+(define (required-size items)
+      (let ([required-bits (exact-ceiling (log (length items) 2))])
+        (if (> required-bits 1)
+            (cons (- required-bits 1) 0)
+            null)))
+
 (define-language rtl0
   (entry Module)
   (terminals
@@ -300,6 +306,46 @@
            (,default-assigns ...)
            (,operation ...))))]))
 
+(define-pass add-boilerplate-ports : rtl4 (ast) -> rtl4 ()
+  (definitions
+    (define (clk-port)
+      (with-output-language (rtl4 Port)
+        `(in clk)))
+    (define (start-port)
+      (with-output-language (rtl4 Port)
+        `(in start)))
+    (define (operation-port operations)
+      (let ([size (required-size operations)])
+        (with-output-language (rtl4 Port)
+          (if (empty? size)
+              `(in operation)
+              `(in operation ,size)))))
+    (define (busy-port)
+      (with-output-language (rtl4 Port)
+        `(out busy)))
+    (define (boilerplate-ports operations)
+      (list
+       (clk-port)
+       (start-port)
+       (operation-port operations)
+       (busy-port))))
+  (module-pass : Module (mo) -> Module ()
+    [(,module-name
+      (,port ...)
+      (,operation-entry ...)
+      (,state-name ...)
+      (,declaration ...)
+      (,default-assign ...)
+      (,operation ...))
+     (let ([augmented-ports (append (boilerplate-ports operation-entry) port)])
+       `(,module-name
+         (,augmented-ports ...)
+         (,operation-entry ...)
+         (,state-name ...)
+         (,declaration ...)
+         (,default-assign ...)
+         (,operation ...)))]))
+
 (define-language rtl5
   (extends rtl4)
   (AssignState (assign-state)
@@ -360,34 +406,8 @@
            (,assign-states ...)
            (,next-state-states ...))))]))
 
-(define-pass add-boilerplate : rtl5 (ast) -> rtl5 ()
+(define-pass add-boilerplate-states : rtl5 (ast) -> rtl5 ()
   (definitions
-    (define (required-size items)
-      (let ([required-bits (exact-ceiling (log (length items) 2))])
-        (if (> required-bits 1)
-            (cons (- required-bits 1) 0)
-            null)))
-    (define (clk-port)
-      (with-output-language (rtl5 Port)
-        `(in clk)))
-    (define (start-port)
-      (with-output-language (rtl5 Port)
-        `(in start)))
-    (define (operation-port operations)
-      (let ([size (required-size operations)])
-        (with-output-language (rtl5 Port)
-          (if (empty? size)
-              `(in operation)
-              `(in operation ,size)))))
-    (define (busy-port)
-      (with-output-language (rtl5 Port)
-        `(out busy)))
-    (define (boilerplate-ports operations)
-      (list
-       (clk-port)
-       (start-port)
-       (operation-port operations)
-       (busy-port)))
     (define (boilerplate-state-names)
       '(init op_case))
     (define (state-reg states)
@@ -419,17 +439,19 @@
     (define (init-next-state)
       (with-output-language (rtl5 NextStateState)
         `(init (case (reg start) (((const 1 b 1) op_case)) init))))
+    (define (operation-entry-pair operation-entry)
+      (nanopass-case (rtl5 OperationEntry) operation-entry
+        [(,symbol0 . ,symbol1) (cons symbol0 symbol1)]))
     (define (op-case-next-state operation-entries)
-      (let ([case-values (map car operation-entries)]
-            [case-labels (map cdr operation-entries)])
-        (with-output-language (rtl5 NextStateState)
-          `(op_case (case (in operation) ((,case-values ,case-labels) ...) init)))))
+      (let ([operation-entry-pairs (map operation-entry-pair operation-entries)])
+        (let ([case-values (map car operation-entry-pairs)]
+              [case-labels (map cdr operation-entry-pairs)])
+          (with-output-language (rtl5 NextStateState)
+            `(op_case (case (in operation) ((,case-values ,case-labels) ...) init))))))
     (define (boilerplate-next-states operation-entries)
       (list
        (init-next-state)
        (op-case-next-state operation-entries))))
-  (operation-entry-pass : OperationEntry (oe) -> * ()
-    [(,symbol0 . ,symbol1) (cons symbol0 symbol1)])
   (module-pass : Module (mo) -> Module ()
     [(,module-name
       (,port ...)
@@ -439,14 +461,12 @@
       (,default-assign ...)
       (,assign-state ...)
       (,next-state-state ...))
-     (let ([operation-entries (map operation-entry-pass operation-entry)]
-           [augmented-state-names (append (boilerplate-state-names) state-name)])
-       (let ([augmented-ports (append (boilerplate-ports operation-entries) port)]
-             [augmented-declarations (append (boilerplate-declarations augmented-state-names) declaration)]
+     (let ([augmented-state-names (append (boilerplate-state-names) state-name)])
+       (let ([augmented-declarations (append (boilerplate-declarations augmented-state-names) declaration)]
              [augmented-assign-states (append (boilerplate-assign-states) assign-state)]
-             [augmented-next-states (append (boilerplate-next-states operation-entries) next-state-state)])
+             [augmented-next-states (append (boilerplate-next-states operation-entry) next-state-state)])
          `(,module-name
-           (,augmented-ports ...)
+           (,port ...)
            (,operation-entry ...)
            (,augmented-state-names ...)
            (,augmented-declarations ...)
@@ -698,8 +718,9 @@
   (compose1
    pretty-format
    rtl-to-pprint
-   add-boilerplate
+   add-boilerplate-states
    split-states
+   add-boilerplate-ports
    add-default-assigns
    add-state-names
    add-operation-entries
