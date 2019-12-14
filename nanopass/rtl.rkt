@@ -511,20 +511,19 @@
 (define-pass split-states : rtl5 (ast) -> rtl6 ()
   (definitions
     (define (extract-state-pairs operations)
-      (apply append
-       (for/list ([operation operations])
+      (for/lists (assigns nexts #:result (values (apply append assigns) (apply append nexts)))
+                 ([operation operations])
         (nanopass-case (rtl6 Operation) operation
           [(,symbol (,port ...) (,state ...))
-           (for/list ([state state])
+           (for/lists (_assigns _nexts)
+                      ([state state])
              (nanopass-case (rtl6 State) state
                [(,symbol (,assign ...) ,next-state)
-                (let ([assign-state
-                       (with-output-language (rtl6 AssignState)
-                         `(,symbol (,assign ...)))]
-                      [next-state-state
-                       (with-output-language (rtl6 NextStateState)
-                         `(,symbol ,next-state))])
-                  (cons assign-state next-state-state))]))])))))
+                (values
+                 (with-output-language (rtl6 AssignState)
+                   `(,symbol (,assign ...)))
+                 (with-output-language (rtl6 NextStateState)
+                   `(,symbol ,next-state)))]))]))))
   (module-pass : Module (mo) -> Module ()
     [(,module-name
       (,[port] ...)
@@ -533,17 +532,15 @@
       (,[declaration] ...)
       (,[default-assign] ...)
       (,[operation] ...))
-     (let ([state-pairs (extract-state-pairs operation)])
-       (let ([assign-states (map car state-pairs)]
-             [next-state-states (map cdr state-pairs)])
-         `(,module-name
-           (,port ...)
-           (,operation-entry ...)
-           (,state-name ...)
-           (,declaration ...)
-           (,default-assign ...)
-           (,assign-states ...)
-           (,next-state-states ...))))]))
+     (let-values ([(assign-states next-state-states) (extract-state-pairs operation)])
+       `(,module-name
+         (,port ...)
+         (,operation-entry ...)
+         (,state-name ...)
+         (,declaration ...)
+         (,default-assign ...)
+         (,assign-states ...)
+         (,next-state-states ...)))]))
 
 (define-pass add-boilerplate-states : rtl6 (ast) -> rtl6 ()
   (definitions
