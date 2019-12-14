@@ -16,6 +16,7 @@
 ** Either check uniqueness of operation/state names or use gensyms or something
 ** If there's only one operation, we don't need op selector
 ** If the only operation is combinational, we don't need start/busy signals
+** Can we elide unused operations from sub-FSM?
 * Tasks
 ** TODO design final nanopass language for generating verilog modules
 *** DONE module name

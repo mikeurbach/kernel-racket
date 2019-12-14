@@ -2,13 +2,13 @@
 
 (require "rtl.rkt")
 
-(define-parser rtl-adt-parser rtl-adt)
+(define-parser rtl-parser rtl0)
 
 ;; Pair module example
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(pair
      ((mem cars (8 . 0) (255 . 0))
       (mem cdrs (8 . 0) (255 . 0))
@@ -54,7 +54,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -65,7 +65,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -76,7 +76,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -87,7 +87,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -100,7 +100,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -111,7 +111,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -122,7 +122,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -133,7 +133,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -146,7 +146,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -157,7 +157,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -168,7 +168,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -179,7 +179,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -192,7 +192,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -203,7 +203,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -214,7 +214,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -225,7 +225,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -236,7 +236,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -249,7 +249,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -260,7 +260,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -271,7 +271,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -282,7 +282,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -295,7 +295,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -306,7 +306,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -317,7 +317,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -328,7 +328,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -341,7 +341,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -352,7 +352,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -363,7 +363,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -374,7 +374,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -387,7 +387,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -398,7 +398,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -409,7 +409,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -420,7 +420,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -433,7 +433,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -444,7 +444,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -455,7 +455,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -466,7 +466,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -479,7 +479,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -490,7 +490,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -503,7 +503,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -514,7 +514,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -525,7 +525,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -536,7 +536,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -547,7 +547,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -560,7 +560,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -571,7 +571,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -584,7 +584,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
@@ -598,7 +598,7 @@
 
 (display
  (adt-to-verilog
-  (rtl-adt-parser
+  (rtl-parser
    '(mod
      ()
      ((op1
