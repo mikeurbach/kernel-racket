@@ -57,13 +57,12 @@
       (reg list_ref (8 . 0))
       (reg tuple_ref (8 . 0))
       (mod pair pair_instance))
-     ()))))
-     ;; (new
-     ;;  ((in env_in (8 . 0))
-     ;;   (out env_out (8 . 0)))
-     ;;  ((alloc
-     ;;    (((mod pair) (op cons) (const 9 h 100) (in env_in) (out env_out)))
-     ;;    init)))
+     ((new
+       ((in env_in (8 . 0))
+        (out env_out (8 . 0)))
+       ((alloc
+         (((mod pair_instance) (op cons) (const 9 h 100) (in env_in) (out env_out)))
+         init))))))))
      ;; (bind
      ;;  ((in env_in (8 . 0))
      ;;   (in symbol (8 . 0))
