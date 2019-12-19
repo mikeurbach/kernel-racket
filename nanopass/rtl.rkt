@@ -53,15 +53,15 @@
               null))
         null)))
 
-(define (concat-symbols symbol0 symbol1)
+(define (concat-symbols symbol0 symbol1 sep)
   (string->symbol
    (string-append
     (symbol->string symbol0)
-    "_"
+    (symbol->string sep)
     (symbol->string symbol1))))
 
 (define (build-wait-state-name module-name wait-type)
-  (concat-symbols module-name wait-type))
+  (concat-symbols module-name wait-type '_))
 
 (define-language rtl0
   (entry Module)
@@ -313,7 +313,7 @@
           [(list 'out name) `(out ,name)]
           [(list 'out name size) `(out ,name ,size)])))
     (define (build-port-target-name instance-name port-name)
-      (concat-symbols instance-name port-name))
+      (concat-symbols instance-name port-name '_))
     (define (build-port-target-size port)
       (if (empty? (cddr port))
           null
@@ -427,7 +427,7 @@
                        #t)
                    #f)))]))
     (define (build-state-name state-name suffix)
-      (concat-symbols state-name suffix))
+      (concat-symbols state-name suffix '_))
     (define (extract-module-name mod-ref)
       (nanopass-case (rtl3 ModRef) mod-ref
         [(mod ,symbol) symbol]))
@@ -444,6 +444,24 @@
         (match port-target
           [(list 'wire name) `(wire ,name)]
           [(list 'wire name size) `(wire ,name)])))
+    (define (build-boilerplate-start-assigns module-name operation-name)
+      (let ([port-bindings (hash-ref module-port-bindings module-name)])
+        (let ([start-reg (hash-ref port-bindings 'start)]
+              [operation-reg (hash-ref port-bindings 'operation)])
+          (let ([start-target (port-target-to-target start-reg)]
+                [start-value (with-output-language (rtl4 Value) `(const 1 b 1))]
+                [operation-target (port-target-to-target operation-reg)]
+                [operation-value (concat-symbols module-name operation-name '\.)])
+            (with-output-language (rtl4 Assign)
+              (list
+               `(,start-target ,start-value)
+               `(,operation-target ,operation-value)))))))
+    (define (process-build-assigns boilerplate-start-assigns start-assigns done-assigns)
+      (values
+       (append
+        boilerplate-start-assigns
+        (filter not-null? start-assigns))
+       (filter not-null? done-assigns)))
     (define (build-assigns assign)
       (nanopass-case (rtl3 Assign) assign
         [(,mod-ref ,mod-op ,mod-arg ...)
@@ -451,13 +469,17 @@
                [operation-name (extract-operation-name mod-op)])
            (let ([bound-module-name (hash-ref module-name-bindings module-name)]
                  [port-bindings (hash-ref module-port-bindings module-name)])
-             (let ([module-signature (hash-ref module-signatures bound-module-name)])
+             (let ([module-signature (hash-ref module-signatures bound-module-name)]
+                   [boilerplate-start-assigns
+                    (build-boilerplate-start-assigns module-name operation-name)])
                (let ([ports (hash-ref (hash-ref module-signature 'operations) operation-name)])
                  (if (not (eq? (length mod-arg) (length ports)))
                      (error "module operation arguments do not match operation's ports")
                      (for/lists (start-assigns done-assigns
-                                 #:result (values (filter not-null? start-assigns)
-                                                  (filter not-null? done-assigns)))
+                                  #:result (process-build-assigns
+                                            boilerplate-start-assigns
+                                            start-assigns
+                                            done-assigns))
                                 ([i (in-range (length ports))])
                        (let ([port (list-ref ports i)]
                              [arg (list-ref mod-arg i)])
