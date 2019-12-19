@@ -17,6 +17,8 @@
 ** If there's only one operation, we don't need op selector
 ** If the only operation is combinational, we don't need start/busy signals
 ** Can we elide unused operations from sub-FSM?
+** Support for dispatching multiple sub-module operations and awaiting all of them
+** Optimization to fuse states with no dependencies (e.g. the second state of a sub-module operation can fuse with the next state)
 * Tasks
 ** TODO design final nanopass language for generating verilog modules
 *** DONE module name
