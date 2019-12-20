@@ -310,7 +310,8 @@
   (Value (value)
     ( + wire-ref))
   (PortTarget (port-target)
-    ( + register
+    ( + input
+        register
         wire-ref))
   (PortBinding (port-binding)
     ( + (port port-target)))
@@ -334,7 +335,9 @@
           [(list 'out name) `(out ,name)]
           [(list 'out name size) `(out ,name ,size)])))
     (define (build-port-target-name instance-name port-name)
-      (concat-symbols instance-name port-name '_))
+      (if (eq? port-name 'clk)
+          'clk
+          (concat-symbols instance-name port-name '_)))
     (define (build-port-target-size port)
       (if (empty? (cddr port))
           null
@@ -346,9 +349,11 @@
               [port-target-size (build-port-target-size port)])
           (with-output-language (rtl3 PortTarget)
             (cond [(eq? port-type 'in)
-                   (if (empty? port-target-size)
-                       `(reg ,port-target-name)
-                       `(reg ,port-target-name ,port-target-size))]
+                   (if (eq? port-name 'clk)
+                       `(in clk)
+                       (if (empty? port-target-size)
+                           `(reg ,port-target-name)
+                           `(reg ,port-target-name ,port-target-size)))]
                   [(eq? port-type 'out)
                    (if (empty? port-target-size)
                        `(wire ,port-target-name)
@@ -376,6 +381,8 @@
         [(out ,symbol ,size) symbol]))
     (define (extract-port-target port-target)
       (nanopass-case (rtl3 PortTarget) port-target
+        [(in ,symbol) `(in ,symbol)]
+        [(in ,symbol ,size) `(in ,symbol ,size)]
         [(reg ,symbol) `(reg ,symbol)]
         [(reg ,symbol ,size) `(reg ,symbol ,size)]
         [(wire ,symbol) `(wire ,symbol)]
@@ -394,10 +401,17 @@
 
 (define-pass add-port-binding-declarations : rtl3 (ast) -> rtl3 ()
   (definitions
+    (define (not-clk? port-target)
+      (nanopass-case (rtl3 PortTarget) port-target
+        [(in ,symbol) (not (eq? symbol 'clk))]
+        [(in ,symbol ,size) (not (eq? symbol 'clk))]
+        [else #t]))
     (define (extract-port-targets port-bindings)
-      (for/list ([port-binding port-bindings])
-        (nanopass-case (rtl3 PortBinding) port-binding
-          [(,port ,port-target) port-target])))
+      (filter
+       not-clk?
+       (for/list ([port-binding port-bindings])
+         (nanopass-case (rtl3 PortBinding) port-binding
+           [(,port ,port-target) port-target]))))
     (define (extract-port-bindings declaration)
       (nanopass-case (rtl3 Declaration) declaration
         [(mod ,symbol0 ,symbol1 (,port-binding ...)) (extract-port-targets port-binding)]
@@ -1022,6 +1036,7 @@
     [(mem ,symbol ,size0 ,size1)
      (hs-append (pprint-register reg symbol size0) (pprint-size size1))])
   (port-target-pass : PortTarget (pt) -> * ()
+    [,input (input-name-pass input)]
     [,register (register-name-pass register)]
     [,wire-ref (wire-ref-name-pass wire-ref)])
   (port-binding-pass : PortBinding (pb) -> * ()
