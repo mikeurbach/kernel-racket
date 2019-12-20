@@ -154,8 +154,11 @@
     (mod-ref mod-op mod-arg ...))
   (CaseStatement (case-statement)
     (case value0 ((value1 symbol1) ...) symbol0))
+  (Continuation (continuation)
+    (symbol0 symbol1 symbol2))
   (NextState (next-state)
     symbol
+    continuation
     case-statement)
   (State (state)
     (symbol (assign ...) next-state))
@@ -502,23 +505,26 @@
                                     (let ([target (mod-arg-to-target arg)]
                                           [value (port-target-to-value rtl4 port-target)])
                                       (values null `(,target ,value)))]))))))))))]))
-    (define (build-start-next-state assign)
+    (define (build-start-next-state assign done-state)
       (nanopass-case (rtl3 Assign) assign
         [(,mod-ref ,mod-op ,mod-arg ...)
          (let ([module-name (extract-module-name mod-ref)])
-           (build-wait-state-name module-name 'busy))]))
+           (let ([next-state (build-wait-state-name module-name 'busy)]
+                 [continue-name (build-continuation-name module-name)])
+             (with-output-language (rtl4 NextState)
+               `(,next-state ,continue-name ,done-state))))]))
     (define (build-states state)
       (nanopass-case (rtl3 State) state
         [(,symbol (,assign ...) ,next-state)
          (let ([single-assign (car assign)]) ; only dealing with one for now
            (let ([start-symbol (build-state-name symbol 'start)]
-                 [start-next-state (build-start-next-state single-assign)]
                  [done-symbol (build-state-name symbol 'done)])
-             (let-values ([(start-assigns done-assigns) (build-assigns single-assign)])
-               (with-output-language (rtl4 State)
-                 (list
-                  `(,start-symbol (,start-assigns ...) ,start-next-state)
-                  `(,done-symbol (,done-assigns ...) ,next-state))))))]))
+             (let ([start-next-state (build-start-next-state single-assign done-symbol)])
+               (let-values ([(start-assigns done-assigns) (build-assigns single-assign)])
+                 (with-output-language (rtl4 State)
+                   (list
+                    `(,start-symbol (,start-assigns ...) ,start-next-state)
+                    `(,done-symbol (,done-assigns ...) ,next-state)))))))]))
     (define (build-lowered-states states)
       (append-map
        (lambda (state)
@@ -1075,9 +1081,15 @@
                          (with-semi (hs-append next_state equals (symtext symbol0)))))
                 end)))
       endcase)])
+  (continuation-pass : Continuation (c) -> * ()
+    [(,symbol0 ,symbol1 ,symbol2)
+     (v-append
+      (with-semi (hs-append next_state equals (symtext symbol0)))
+      (with-semi (hs-append (symtext symbol1) equals (symtext symbol2))))])
   (next-state-pass : NextState (ns) -> * ()
     [,symbol
      (with-semi (hs-append next_state equals (symtext symbol)))]
+    [,continuation (continuation-pass continuation)]
     [,case-statement (case-statement-pass case-statement)])
   (next-state-state-pass : NextStateState (nss) -> * ()
     [(,symbol ,[next-state-pass : doc])
