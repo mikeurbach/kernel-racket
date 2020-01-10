@@ -150,7 +150,8 @@
   (Assign (assign)
     (target value)
     (target unary-op value)
-    (target value1 binary-op value2)
+    (target value1 binary-op value2))
+  (Call (call)
     (mod-ref mod-op mod-arg ...))
   (CaseStatement (case-statement)
     (case value0 ((value1 symbol1) ...) symbol0))
@@ -160,8 +161,11 @@
     symbol
     continuation
     case-statement)
+  (Action (action)
+    assign
+    call)
   (State (state)
-    (symbol (assign ...) next-state))
+    (symbol (action ...) next-state))
   (Operation (operation)
     (symbol (port ...) (state ...)))
   (ModuleName (module-name)
@@ -436,14 +440,14 @@
 
 (define-language rtl4
   (extends rtl3)
-  (Assign (assign)
-    ( - (mod-ref mod-op mod-arg ...))))
+  (Action (action)
+    ( - call)))
 
-(define-pass lower-module-assigns : rtl3 (ast) -> rtl4 ()
+(define-pass lower-module-calls : rtl3 (ast) -> rtl4 ()
   (definitions
     (define not-null? (compose1 not null?))
-    (define (module-assign? assign)
-      (nanopass-case (rtl3 Assign) assign
+    (define (call-action? action)
+      (nanopass-case (rtl3 Action) action
         [(,mod-ref ,mod-op ,mod-arg ...) #t]
         [else #f]))
     (define (symbol-next-state? next-state)
@@ -452,14 +456,14 @@
         [else #f]))
     (define (module-operation? state)
       (nanopass-case (rtl3 State) state
-        [(,symbol (,assign ...) ,next-state)
-         (let ([module-assigns (filter module-assign? assign)]
+        [(,symbol (,action ...) ,next-state)
+         (let ([call-actions (filter call-action? action)]
                [is-next-state-symbol (symbol-next-state? next-state)])
-           (if (> (length module-assigns) 1)
-               (error "multiple module operations in one state are currently not supported")
-               (if (> (length module-assigns) 0)
+           (if (> (length call-actions) 1)
+               (error "multiple call operations in one state are currently not supported")
+               (if (> (length call-actions) 0)
                    (if (not is-next-state-symbol)
-                       (error "module operation currently requires a symbol for next state")
+                       (error "call operation currently requires a symbol for next state")
                        #t)
                    #f)))]))
     (define (build-state-name state-name suffix)
@@ -488,8 +492,8 @@
         boilerplate-start-assigns
         (filter not-null? start-assigns))
        (filter not-null? done-assigns)))
-    (define (build-assigns assign)
-      (nanopass-case (rtl3 Assign) assign
+    (define (build-assigns action)
+      (nanopass-case (rtl3 Action) action
         [(,mod-ref ,mod-op ,mod-arg ...)
          (let ([module-name (extract-module-name mod-ref)]
                [operation-name (extract-operation-name mod-op)])
@@ -519,8 +523,8 @@
                                     (let ([target (mod-arg-to-target arg)]
                                           [value (port-target-to-value rtl4 port-target)])
                                       (values null `(,target ,value)))]))))))))))]))
-    (define (build-start-next-state assign done-state)
-      (nanopass-case (rtl3 Assign) assign
+    (define (build-start-next-state action done-state)
+      (nanopass-case (rtl3 Action) action
         [(,mod-ref ,mod-op ,mod-arg ...)
          (let ([module-name (extract-module-name mod-ref)])
            (let ([next-state (build-wait-state-name module-name 'busy)]
@@ -529,12 +533,12 @@
                `(,next-state ,continue-name ,done-state))))]))
     (define (build-states state)
       (nanopass-case (rtl3 State) state
-        [(,symbol (,assign ...) ,next-state)
-         (let ([single-assign (car assign)]) ; only dealing with one for now
+        [(,symbol (,action ...) ,next-state)
+         (let ([single-action (car action)]) ; only dealing with one for now
            (let ([start-symbol (build-state-name symbol 'start)]
                  [done-symbol (build-state-name symbol 'done)])
-             (let ([start-next-state (build-start-next-state single-assign done-symbol)])
-               (let-values ([(start-assigns done-assigns) (build-assigns single-assign)])
+             (let ([start-next-state (build-start-next-state single-action done-symbol)])
+               (let-values ([(start-assigns done-assigns) (build-assigns single-action)])
                  (with-output-language (rtl4 State)
                    (list
                     `(,start-symbol (,start-assigns ...) ,start-next-state)
@@ -1169,7 +1173,7 @@
    split-states
    add-operation-entries
    add-default-assigns
-   lower-module-assigns
+   lower-module-calls
    add-port-binding-declarations
    store-module-bindings!
    add-module-port-bindings
