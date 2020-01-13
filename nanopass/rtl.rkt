@@ -152,7 +152,7 @@
     (target unary-op value)
     (target value1 binary-op value2))
   (Call (call)
-    (mod-ref mod-op mod-arg ...))
+    (invoke mod-ref mod-op mod-arg ...))
   (CaseStatement (case-statement)
     (case value0 ((value1 symbol1) ...) symbol0))
   (Continuation (continuation)
@@ -226,7 +226,7 @@
           [(,symbol (,port ...) (,state ...))
            (for/list ([state state])
              (nanopass-case (rtl2 State) state
-               [(,symbol (,assign ...) ,next-state) symbol]))]))
+               [(,symbol (,action ...) ,next-state) symbol]))]))
        operations)))
   (module-pass : Module (mo) -> Module ()
     [(,module-name
@@ -448,7 +448,7 @@
     (define not-null? (compose1 not null?))
     (define (call-action? action)
       (nanopass-case (rtl3 Action) action
-        [(,mod-ref ,mod-op ,mod-arg ...) #t]
+        [(invoke ,mod-ref ,mod-op ,mod-arg ...) #t]
         [else #f]))
     (define (symbol-next-state? next-state)
       (nanopass-case (rtl3 NextState) next-state
@@ -494,7 +494,7 @@
        (filter not-null? done-assigns)))
     (define (build-assigns action)
       (nanopass-case (rtl3 Action) action
-        [(,mod-ref ,mod-op ,mod-arg ...)
+        [(invoke ,mod-ref ,mod-op ,mod-arg ...)
          (let ([module-name (extract-module-name mod-ref)]
                [operation-name (extract-operation-name mod-op)])
            (let ([bound-module-name (hash-ref module-name-bindings module-name)]
@@ -525,7 +525,7 @@
                                       (values null `(,target ,value)))]))))))))))]))
     (define (build-start-next-state action done-state)
       (nanopass-case (rtl3 Action) action
-        [(,mod-ref ,mod-op ,mod-arg ...)
+        [(invoke ,mod-ref ,mod-op ,mod-arg ...)
          (let ([module-name (extract-module-name mod-ref)])
            (let ([next-state (build-wait-state-name module-name 'busy)]
                  [continue-name (build-continuation-name module-name)])
