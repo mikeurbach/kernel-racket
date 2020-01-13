@@ -60,25 +60,25 @@
      ((new
        ((in env_in (8 . 0))
         (out env_out (8 . 0)))
-       ((alloc
-         (((mod pair_instance) (op cons) (const 9 h 100) (in env_in) (out env_out)))
+       ((alloc_env
+         ((invoke (mod pair_instance) (op cons) (const 9 h 100) (in env_in) (out env_out)))
+         init)))
+      (bind
+       ((in env_in (8 . 0))
+        (in symbol (8 . 0))
+        (in value (8 . 0)))
+       ((alloc_tuple
+         ((invoke (mod pair_instance) (op cons) (in symbol) (in value) (reg tuple_ref)))
+         load_car)
+        (load_car
+         ((invoke (mod pair_instance) (op car) (in env_in) (reg list_ref)))
+         alloc_list)
+        (alloc_list
+         ((invoke (mod pair_instance) (op cons) (reg tuple_ref) (reg list_ref) (reg list_ref)))
+         update_car)
+        (update_car
+         ((invoke (mod pair_instance) (op set_car) (reg env_in) (reg list_ref)))
          init))))))))
-     ;; (bind
-     ;;  ((in env_in (8 . 0))
-     ;;   (in symbol (8 . 0))
-     ;;   (in value (8 . 0)))
-     ;;  ((alloc_tuple
-     ;;    (((mod pair_instance) (op cons) (in symbol) (in value) (reg tuple_ref)))
-     ;;    (continue load_car))
-     ;;   (load_car
-     ;;    (((mod pair_instance) (op car) (in env_in) (reg list_ref)))
-     ;;    (continue alloc_list))
-     ;;   (alloc_list
-     ;;    (((mod pair_instance) (op cons) (reg tuple_ref) (reg list_ref)))
-     ;;    (continue update_car))
-     ;;   (update_car
-     ;;    (((mod pair_instance) (op set_car) (reg env_in) (reg list_ref)))
-     ;;    init)))
 
 ;; Basic Assigns
 
