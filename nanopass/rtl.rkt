@@ -10,6 +10,7 @@
 (define module-signatures (make-hash))
 (define module-name-bindings (make-hash))
 (define module-port-bindings (make-hash))
+(define lowered-entries (make-hash))
 
 ;; predicates
 (define (size? e)
@@ -537,6 +538,7 @@
          (let ([single-action (car action)]) ; only dealing with one for now
            (let ([start-symbol (build-state-name symbol 'start)]
                  [done-symbol (build-state-name symbol 'done)])
+             (hash-set! lowered-entries symbol start-symbol)
              (let ([start-next-state (build-start-next-state single-action done-symbol)])
                (let-values ([(start-assigns done-assigns) (build-assigns single-action)])
                  (with-output-language (rtl4 State)
@@ -557,6 +559,17 @@
     [(,symbol (,[port] ...) (,state ...))
      (let ([augmented-states (build-lowered-states state)])
        `(,symbol (,port ...) (,augmented-states ...)))]))
+
+(define-pass adjust-lowered-entries : rtl4 (ast) -> rtl4 ()
+  (definitions
+    (define (adjust-symbol original-next-state)
+      (hash-ref lowered-entries original-next-state original-next-state)))
+  (next-state-pass : NextState (n) -> NextState ()
+    [,symbol (adjust-symbol symbol)]
+    [(case ,value0 ((,value1 ,symbol1) ...) ,symbol0)
+     (let ([adjusted-next-states (map adjust-symbol symbol1)]
+           [adjusted-else-state (adjust-symbol symbol0)])
+       `(case ,value0 ((,value1 ,adjusted-next-states) ...) ,adjusted-else-state))]))
 
 (define-language rtl5
   (extends rtl4)
@@ -1173,6 +1186,7 @@
    split-states
    add-operation-entries
    add-default-assigns
+   adjust-lowered-entries
    lower-module-calls
    add-port-binding-declarations
    store-module-bindings!
