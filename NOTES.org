@@ -9,18 +9,19 @@
 *** type symbol -> size
 ** Create module-specification
 * Ideas and Questions
-** Can tighten up the sub-FSM calls?
-** Easy to share states by hand, but how to automate?
-** How will lazy evaluation fit in?
-** Can operations share ports? (currently they will if they name them the same)
-** Either check uniqueness of operation/state names or use gensyms or something
-** If there's only one operation, we don't need op selector
-** If the only operation is combinational, we don't need start/busy signals
-** Can we elide unused operations from sub-FSM?
-** Support for dispatching multiple sub-module operations and awaiting all of them
-** More complicated sub-module dispatch might need FIFOs for args
-** Optimization to fuse states with no dependencies (e.g. the second state of a sub-module operation can fuse with the next state)
-** Instead of private sub-modules, global class instances like in smalltalk
+** 1) Can tighten up the sub-FSM calls?
+** 2) Easy to share states by hand, but how to automate?
+** 3) How will lazy evaluation fit in?
+** 4) Can operations share ports? (currently they will if they name them the same)
+** 5) Either check uniqueness of operation/state names or use gensyms or something
+** 6) If there's only one operation, we don't need op selector
+** 7) If the only operation is combinational, we don't need start/busy signals
+** 8) Can we elide unused operations from sub-FSM?
+** 9) Support for dispatching multiple sub-module operations and awaiting all of them
+** 10) More complicated sub-module dispatch might need FIFOs for args
+** 11) Optimization to fuse states with no dependencies (e.g. the second state of a sub-module operation can fuse with the next state)
+** 12) Instead of private sub-modules, global class instances like in smalltalk
+** 13) Type checking and fully type-checked program should be reused for compilation, simulation, etc.
 * Tasks
 ** TODO design final nanopass language for generating verilog modules
 *** DONE module name
@@ -43,3 +44,8 @@
 *** DONE parameters
 **** Should this just be bookkeeping we just do? It's only being done for word size... yes.
 ** TODO write out pair and environment modules in the new language
+** TODO update machine simulator to simulate a module and its operations
+** TODO create test framework that can drive machine simulator AND generate verilog tests
+** TODO verify pair and environment modules at the rtl0 and verilog level
+** TODO refactor instantiations to implement ideas 10) and 12)
+** TODO write out evaluator module in the rtl0 language
