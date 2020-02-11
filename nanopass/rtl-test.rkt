@@ -67,9 +67,9 @@
       (bind
        ((in env_in (8 . 0))
         (in symbol (8 . 0))
-        (in value (8 . 0)))
+        (in value_in (8 . 0)))
        ((alloc_tuple
-         ((invoke (mod pair_instance) (op cons) (in symbol) (in value) (reg tuple_ref)))
+         ((invoke (mod pair_instance) (op cons) (in symbol) (in value_in) (reg tuple_ref)))
          load_car)
         (load_car
          ((invoke (mod pair_instance) (op car) (in env_in) (reg list_ref)))
@@ -83,10 +83,10 @@
       (lookup
        ((in env_in (8 . 0))
         (in symbol (8 . 0))
-        (out value (8 . 0)))
+        (out value_out (8 . 0)))
        ((store_ref
          (((reg env_ref) (reg env_in))
-          ((out value) (const 9 h 100)))
+          ((out value_out) (const 9 h 100)))
          load_ref_car)
         (load_ref_car
          ((invoke (mod pair_instance) (op car) (reg env_ref) (reg list_ref)))
@@ -111,7 +111,7 @@
          ((invoke (mod pair_instance) (op cdr) (reg list_ref) (reg list_ref)))
          list_ref_check)
         (load_tuple_cdr
-         ((invoke (mod pair_instance) (op cdr) (reg tuple_ref) (out value)))
+         ((invoke (mod pair_instance) (op cdr) (reg tuple_ref) (out value_out)))
          init)
         (load_ref_cdr
          ((invoke (mod pair_instance) (op cdr) (reg env_ref) (reg env_ref)))
@@ -122,564 +122,564 @@
            (((const 9 h 100) init))
            load_ref_car)))))))))
 
-;; Basic Assigns
+;; ;; Basic Assigns
 
-;;;; Register Target, Register Value
+;; ;;;; Register Target, Register Value
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((reg foo) (reg bar)))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((reg foo) (reg bar)))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((reg foo) (reg bar (7 . 0))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((reg foo) (reg bar (7 . 0))))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((reg foo (7 . 0)) (reg bar)))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((reg foo (7 . 0)) (reg bar)))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((reg foo (7 . 0)) (reg bar (7 . 0))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((reg foo (7 . 0)) (reg bar (7 . 0))))
+;;          init))))))))
 
-;;;; Register Target, Memory Value
+;; ;;;; Register Target, Memory Value
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((reg foo) (mem ram (reg addr))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((reg foo) (mem ram (reg addr))))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((reg foo) (mem ram (reg addr (7 . 0)))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((reg foo) (mem ram (reg addr (7 . 0)))))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((reg foo (7 . 0)) (mem ram (reg addr))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((reg foo (7 . 0)) (mem ram (reg addr))))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((reg foo (7 . 0)) (mem ram (reg addr (7 . 0)))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((reg foo (7 . 0)) (mem ram (reg addr (7 . 0)))))
+;;          init))))))))
 
-;;;; Register Target, Input Value
+;; ;;;; Register Target, Input Value
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((reg foo) (in bar)))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((reg foo) (in bar)))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((reg foo) (in bar (7 . 0))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((reg foo) (in bar (7 . 0))))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((reg foo (7 . 0)) (in bar)))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((reg foo (7 . 0)) (in bar)))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((reg foo (7 . 0)) (in bar (7 . 0))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((reg foo (7 . 0)) (in bar (7 . 0))))
+;;          init))))))))
 
-;;;; Memory Target, Register Value
+;; ;;;; Memory Target, Register Value
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((mem ram (reg foo)) (reg bar)))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((mem ram (reg foo)) (reg bar)))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((mem ram (reg foo)) (reg bar (7 . 0))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((mem ram (reg foo)) (reg bar (7 . 0))))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((mem ram (reg foo (7 . 0))) (reg bar)))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((mem ram (reg foo (7 . 0))) (reg bar)))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((mem ram (reg foo (7 . 0))) (reg bar (7 . 0))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((mem ram (reg foo (7 . 0))) (reg bar (7 . 0))))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((mem ram (const 8 d 23)) (reg bar)))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((mem ram (const 8 d 23)) (reg bar)))
+;;          init))))))))
 
-;;;; Memory Target, Memory Value
+;; ;;;; Memory Target, Memory Value
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((mem ram (reg foo)) (mem ram (reg addr))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((mem ram (reg foo)) (mem ram (reg addr))))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((mem ram (reg foo)) (mem ram (reg addr (7 . 0)))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((mem ram (reg foo)) (mem ram (reg addr (7 . 0)))))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((mem ram (reg foo (7 . 0))) (mem ram (reg addr))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((mem ram (reg foo (7 . 0))) (mem ram (reg addr))))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((mem ram (reg foo (7 . 0))) (mem ram (reg addr (7 . 0)))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((mem ram (reg foo (7 . 0))) (mem ram (reg addr (7 . 0)))))
+;;          init))))))))
 
-;;;; Memory Target, Input Value
+;; ;;;; Memory Target, Input Value
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((mem ram (reg foo)) (in bar)))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((mem ram (reg foo)) (in bar)))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((mem ram (reg foo)) (in bar (7 . 0))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((mem ram (reg foo)) (in bar (7 . 0))))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((mem ram (reg foo (7 . 0))) (in bar)))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((mem ram (reg foo (7 . 0))) (in bar)))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((mem ram (reg foo (7 . 0))) (in bar (7 . 0))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((mem ram (reg foo (7 . 0))) (in bar (7 . 0))))
+;;          init))))))))
 
-;;;; Output Target, Register Value
+;; ;;;; Output Target, Register Value
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((out foo) (reg bar)))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((out foo) (reg bar)))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((out foo) (reg bar (7 . 0))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((out foo) (reg bar (7 . 0))))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((out foo (7 . 0)) (reg bar)))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((out foo (7 . 0)) (reg bar)))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((out foo (7 . 0)) (reg bar (7 . 0))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((out foo (7 . 0)) (reg bar (7 . 0))))
+;;          init))))))))
 
-;;;; Output Target, Memory Value
+;; ;;;; Output Target, Memory Value
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((out foo) (mem ram (reg addr))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((out foo) (mem ram (reg addr))))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((out foo) (mem ram (reg addr (7 . 0)))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((out foo) (mem ram (reg addr (7 . 0)))))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((out foo (7 . 0)) (mem ram (reg addr))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((out foo (7 . 0)) (mem ram (reg addr))))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((out foo (7 . 0)) (mem ram (reg addr (7 . 0)))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((out foo (7 . 0)) (mem ram (reg addr (7 . 0)))))
+;;          init))))))))
 
-;;;; Output Target, Input Value
+;; ;;;; Output Target, Input Value
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((out foo) (in bar)))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((out foo) (in bar)))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((out foo) (in bar (7 . 0))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((out foo) (in bar (7 . 0))))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((out foo (7 . 0)) (in bar)))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((out foo (7 . 0)) (in bar)))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((out foo (7 . 0)) (in bar (7 . 0))))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((out foo (7 . 0)) (in bar (7 . 0))))
+;;          init))))))))
 
-;; Unary Operator Assigns
+;; ;; Unary Operator Assigns
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((reg foo) (op -) (reg bar)))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((reg foo) (op -) (reg bar)))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((reg foo) (op ~) (reg bar)))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((reg foo) (op ~) (reg bar)))
+;;          init))))))))
 
-;; Binary Operator Assigns
+;; ;; Binary Operator Assigns
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((reg foo) (reg bar) (op +) (reg baz)))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((reg foo) (reg bar) (op +) (reg baz)))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((reg foo) (reg bar) (op +) (const 8 d 1)))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((reg foo) (reg bar) (op +) (const 8 d 1)))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((reg foo) (reg bar) (op &) (reg baz)))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((reg foo) (reg bar) (op &) (reg baz)))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((reg foo) (reg bar) (op &) (const 8 h ff)))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((reg foo) (reg bar) (op &) (const 8 h ff)))
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         (((reg foo) (reg bar) (op \|) (const 8 b 11110000)))
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          (((reg foo) (reg bar) (op \|) (const 8 b 11110000)))
+;;          init))))))))
 
-;; Next State
+;; ;; Next State
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         ()
-         init))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          ()
+;;          init))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         ()
-         (case (in start)
-           (((const 1 b 1) opcase))
-           init)))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          ()
+;;          (case (in start)
+;;            (((const 1 b 1) opcase))
+;;            init)))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         ()
-         (case (in op)
-           (((const 2 d 0) op1)
-            ((const 2 d 1) op2))
-           init)))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          ()
+;;          (case (in op)
+;;            (((const 2 d 0) op1)
+;;             ((const 2 d 1) op2))
+;;            init)))))))))
 
-(display
- (adt-to-verilog
-  (rtl-parser
-   '(mod
-     ()
-     ((op1
-       ()
-       ((s1
-         ()
-         (case (in op)
-           ((opsymbol1 op1)
-            (opsymbol2 op2))
-           init)))))))))
+;; (display
+;;  (adt-to-verilog
+;;   (rtl-parser
+;;    '(mod
+;;      ()
+;;      ((op1
+;;        ()
+;;        ((s1
+;;          ()
+;;          (case (in op)
+;;            ((opsymbol1 op1)
+;;             (opsymbol2 op2))
+;;            init)))))))))
