@@ -21,7 +21,7 @@
 ** 10) More complicated sub-module dispatch might need FIFOs for args
 ** 11) Optimization to fuse states with no dependencies (e.g. the second state of a sub-module operation can fuse with the next state)
 ** 12) Instead of private sub-modules, global class instances like in smalltalk
-** 13) Type checking and fully type-checked program should be reused for compilation, simulation, etc.
+** 13) Type checking and fully type-checked program should be reused for interpretation, compilation, simulation, etc.
 * Tasks
 ** TODO design final nanopass language for generating verilog modules
 *** DONE module name

@@ -56,6 +56,7 @@
      ((reg env_ref (8 . 0))
       (reg list_ref (8 . 0))
       (reg tuple_ref (8 . 0))
+      (reg tuple_car (8 . 0))
       (mod pair pair_instance))
      ((new
        ((in env_in (8 . 0))
@@ -78,7 +79,48 @@
          update_car)
         (update_car
          ((invoke (mod pair_instance) (op set_car) (reg env_in) (reg list_ref)))
-         init))))))))
+         init)))
+      (lookup
+       ((in env_in (8 . 0))
+        (in symbol (8 . 0))
+        (out value (8 . 0)))
+       ((store_ref
+         (((reg env_ref) (reg env_in))
+          ((out value) (const 9 h 100)))
+         load_ref_car)
+        (load_ref_car
+         ((invoke (mod pair_instance) (op car) (reg env_ref) (reg list_ref)))
+         list_ref_check)
+        (list_ref_check
+         ()
+         (case (reg list_ref)
+           (((const 9 h 100) load_ref_cdr))
+           load_list_car))
+        (load_list_car
+         ((invoke (mod pair_instance) (op car) (reg list_ref) (reg tuple_ref)))
+         load_tuple_car)
+        (load_tuple_car
+         ((invoke (mod pair_instance) (op car) (reg tuple_ref) (reg tuple_car)))
+         symbol_check)
+        (symbol_check
+         ()
+         (case (reg tuple_car)
+           (((in symbol) load_tuple_cdr))
+           load_list_cdr))
+        (load_list_cdr
+         ((invoke (mod pair_instance) (op cdr) (reg list_ref) (reg list_ref)))
+         list_ref_check)
+        (load_tuple_cdr
+         ((invoke (mod pair_instance) (op cdr) (reg tuple_ref) (out value)))
+         init)
+        (load_ref_cdr
+         ((invoke (mod pair_instance) (op cdr) (reg env_ref) (reg env_ref)))
+         env_ref_check)
+        (env_ref_check
+         ()
+         (case (reg env_ref)
+           (((const 9 h 100) init))
+           load_ref_car)))))))))
 
 ;; Basic Assigns
 
