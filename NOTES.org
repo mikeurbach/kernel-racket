@@ -23,7 +23,7 @@
 ** 12) Instead of private sub-modules, global class instances like in smalltalk
 ** 13) Type checking and fully type-checked program should be reused for interpretation, compilation, simulation, etc.
 * Tasks
-** TODO design final nanopass language for generating verilog modules
+** DONE design final nanopass language for generating verilog modules
 *** DONE module name
 *** DONE ports
 *** DONE operations
@@ -35,7 +35,7 @@
 **** DONE state should have: label, assigns, next state logic
 **** DONE maybe this is wrapped as sub state machine per operation (see above)? yes.
 *** DONE registers
-*** TODO instantiations
+*** DONE instantiations
 *** DONE next state logic
 *** DONE output/register assignments
 **** Simple register to register
@@ -43,9 +43,14 @@
 **** Allowed combinatorial operators
 *** DONE parameters
 **** Should this just be bookkeeping we just do? It's only being done for word size... yes.
-** TODO write out pair and environment modules in the new language
-** TODO update machine simulator to simulate a module and its operations
-** TODO create test framework that can drive machine simulator AND generate verilog tests
-** TODO verify pair and environment modules at the rtl0 and verilog level
-** TODO refactor instantiations to implement ideas 10) and 12)
-** TODO write out evaluator module in the rtl0 language
+** DONE write out pair and environment modules in the new language
+** DONE write out simple combinatorial modules (hint: it didn't go great)
+** TODO build a type system that is just a layer above the rtl level
+** TODO update module calling convention
+*** TODO refactor instantiations to implement ideas 10) and 12)
+**** http://www.cs.columbia.edu/~sedwards/papers/edwards2019compositional.pdf
+*** TODO write out evaluator module in the rtl0 language
+** TODO rtl and verilog level simulation and test harness generation
+*** TODO update machine simulator to simulate a module and its operations
+*** TODO create test framework that can drive machine simulator AND generate verilog tests
+*** TODO verify comb, pair, environment modules at the rtl0 and verilog level
