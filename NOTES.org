@@ -46,6 +46,14 @@
 ** DONE write out pair and environment modules in the new language
 ** DONE write out simple combinatorial modules (hint: it didn't go great)
 ** TODO build a type system that is just a layer above the rtl level
+*** TODO implement an algebraic data type Bit
+*** TODO implement combinatorial functions of Bits and, or, not
+*** TODO implement a Vector of Bits
+*** TODO alias Int as a Vector
+*** TODO implement combinatorial functions of Ints add, subtract, etc.
+*** TODO implement a Memory of Vectors
+*** TODO implement Pair
+*** TODO implement Environment
 ** TODO update module calling convention
 *** TODO refactor instantiations to implement ideas 10) and 12)
 **** http://www.cs.columbia.edu/~sedwards/papers/edwards2019compositional.pdf

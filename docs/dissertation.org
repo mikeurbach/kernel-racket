@@ -44,3 +44,7 @@
 *** Only Core Type is Immutable Pair
 * Register Machines
 ** SICP Chapter 5
+* Formal semantics
+* Compiler implementation
+* Experiments
+* Conclusion and future work
