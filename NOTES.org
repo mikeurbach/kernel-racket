@@ -45,6 +45,9 @@
 **** Should this just be bookkeeping we just do? It's only being done for word size... yes.
 ** DONE write out pair and environment modules in the new language
 ** DONE write out simple combinatorial modules (hint: it didn't go great)
+** TODO integrate with mlir
+*** TODO module language for consuming mlir
+*** TODO module language for consuming operation definition specification?
 ** TODO build a type system that is just a layer above the rtl level
 ** TODO update module calling convention
 *** TODO refactor instantiations to implement ideas 10) and 12)
