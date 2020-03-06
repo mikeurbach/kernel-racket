@@ -21,6 +21,7 @@
 ** 10) More complicated sub-module dispatch might need FIFOs for args
 ** 11) Optimization to fuse states with no dependencies (e.g. the second state of a sub-module operation can fuse with the next state)
 ** 12) Instead of private sub-modules, global class instances like in smalltalk
+*** Support instantiating modules with global, local, or private scope, which correspond to a singleton instance shared by all modules, a private sub-module shared within a module, and a private sub-module instantiated per invokation
 ** 13) Type checking and fully type-checked program should be reused for interpretation, compilation, simulation, etc.
 * Tasks
 ** DONE design final nanopass language for generating verilog modules
@@ -52,6 +53,7 @@
 ** TODO update module calling convention
 *** TODO refactor instantiations to implement ideas 10) and 12)
 **** http://www.cs.columbia.edu/~sedwards/papers/edwards2019compositional.pdf
+**** file:///home/mikeurbach/Downloads/3373087.3375314%20.pdf
 *** TODO write out evaluator module in the rtl0 language
 ** TODO rtl and verilog level simulation and test harness generation
 *** TODO update machine simulator to simulate a module and its operations
