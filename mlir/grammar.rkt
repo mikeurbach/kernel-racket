@@ -1,6 +1,6 @@
 #lang brag
 
-top: integer-literal | float-literal | string-literal | bare-id | bare-id-list | suffix-id | ssa-id | ssa-id-list | symbol-ref-id | caret-id
+top: ssa-use | ssa-use-list
 
 # literals
 decimal-literal: DECIMAL_LITERAL
@@ -17,3 +17,7 @@ ssa-id: /PERCENT suffix-id
 ssa-id-list: ssa-id [/COMMA ssa-id]*
 symbol-ref-id: /AMPERSAND (suffix-id | string-literal)
 caret-id: /CARET suffix-id
+
+# ssa uses
+ssa-use: ssa-id
+ssa-use-list: ssa-use [/COMMA ssa-use]*
