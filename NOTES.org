@@ -23,6 +23,7 @@
 ** 12) Instead of private sub-modules, global class instances like in smalltalk
 *** Support instantiating modules with global, local, or private scope, which correspond to a singleton instance shared by all modules, a private sub-module shared within a module, and a private sub-module instantiated per invokation
 ** 13) Type checking and fully type-checked program should be reused for interpretation, compilation, simulation, etc.
+** 14) Add the boilerplate first
 * Tasks
 ** DONE design final nanopass language for generating verilog modules
 *** DONE module name
@@ -47,13 +48,17 @@
 ** DONE write out pair and environment modules in the new language
 ** DONE write out simple combinatorial modules (hint: it didn't go great)
 ** TODO integrate with mlir
-*** TODO module language for consuming mlir
-*** TODO module language for consuming operation definition specification?
+*** TODO kpn dialect
+*** TODO fsm dialect
+*** TODO verilog dialect
+*** TODO racket integration with mlir
+**** TODO module language for consuming mlir
+**** TODO module language for consuming operation definition specification?
 ** TODO build a type system that is just a layer above the rtl level
 ** TODO update module calling convention
 *** TODO refactor instantiations to implement ideas 10) and 12)
 **** http://www.cs.columbia.edu/~sedwards/papers/edwards2019compositional.pdf
-**** file:///home/mikeurbach/Downloads/3373087.3375314%20.pdf
+**** https://dl.acm.org/doi/10.1145/3373087.3375314
 *** TODO write out evaluator module in the rtl0 language
 ** TODO rtl and verilog level simulation and test harness generation
 *** TODO update machine simulator to simulate a module and its operations
