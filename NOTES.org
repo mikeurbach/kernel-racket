@@ -48,10 +48,17 @@
 ** DONE write out pair and environment modules in the new language
 ** DONE write out simple combinatorial modules (hint: it didn't go great)
 ** TODO integrate with mlir
-*** TODO kpn dialect
-*** TODO fsm dialect
-*** TODO verilog dialect
-*** TODO racket integration with mlir
+*** WAITING dataflow dialect
+**** DONE add fork actors where necessary
+**** TODO decide if worth removing tupling around loop
+***** fold it away or something
+***** use our own ops for concatenation so tupling isn't unit rate
+***** make lowering of unit rate tuple ops special
+*** DONE rtl dialect
+**** DONE lower XLA ops to rtl ops within unit rate
+**** TODO create functions for each op, remembering their inputs/outputs
+**** TODO create a giant mapping of inputs/outputs in some attribute or something
+*** WAITING racket integration with mlir
 **** TODO module language for consuming mlir
 **** TODO module language for consuming operation definition specification?
 ** TODO build a type system that is just a layer above the rtl level

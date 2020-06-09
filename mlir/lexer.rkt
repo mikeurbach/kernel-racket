@@ -11,6 +11,11 @@
      ["%" (token 'PERCENT lexeme)]
      ["@" (token 'AMPERSAND lexeme)]
      ["^" (token 'CARET lexeme)]
+     ["(" (token 'LPAREN lexeme)]
+     [")" (token 'RPAREN lexeme)]
+     [":" (token 'COLON lexeme)]
+     ["=" (token 'EQUALS lexeme)]
+     ["loc" (token 'LOC lexeme)]
      [(:or (:+ numeric) (:: (:or "$" "." "_" "-" alphabetic) (:* (:or "$" "." "_" "-" numeric alphabetic))))
       (token 'SUFFIX_ID lexeme)]
      [(:: (:or "_" alphabetic) (:* (:or "_" "$" "." numeric alphabetic)))

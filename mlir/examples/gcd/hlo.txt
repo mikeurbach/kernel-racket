@@ -1,0 +1,49 @@
+HloModule a_inference_gcd_38__XlaMustCompile_true_config_proto___n_007_n_003CPU_020_001_n_007_n_003GPU_020_0002_002J_0008_001__executor_type____.54
+
+%fused_computation (param_0.1: s32[], param_1.2: s32[]) -> s32[] {
+  %param_0.1 = s32[] parameter(0)
+  %constant.11 = s32[] constant(0), metadata={op_type="FloorMod" op_name="mod"}
+  %compare.9 = pred[] compare(s32[] %param_0.1, s32[] %constant.11), direction=LT, metadata={op_type="FloorMod" op_name="mod"}
+  %param_1.2 = s32[] parameter(1)
+  %compare.8 = pred[] compare(s32[] %param_1.2, s32[] %constant.11), direction=LT, metadata={op_type="FloorMod" op_name="mod"}
+  %compare.7 = pred[] compare(pred[] %compare.9, pred[] %compare.8), direction=NE, metadata={op_type="FloorMod" op_name="mod"}
+  %compare.6 = pred[] compare(s32[] %param_0.1, s32[] %constant.11), direction=NE, metadata={op_type="FloorMod" op_name="mod"}
+  %and.1 = pred[] and(pred[] %compare.7, pred[] %compare.6), metadata={op_type="FloorMod" op_name="mod"}
+  %add.2 = s32[] add(s32[] %param_0.1, s32[] %param_1.2), metadata={op_type="FloorMod" op_name="mod"}
+  ROOT %select.1 = s32[] select(pred[] %and.1, s32[] %add.2, s32[] %param_0.1), metadata={op_type="FloorMod" op_name="mod"}
+}
+
+%while_body_10__.10.clone (inputs.0: (s32[], s32[], s32[])) -> (s32[], s32[], s32[]) {
+  %inputs.0 = (s32[], s32[], s32[]) parameter(0)
+  %get-tuple-element.35 = s32[] get-tuple-element((s32[], s32[], s32[]) %inputs.0), index=0
+  %constant.3 = s32[] constant(1), metadata={op_type="AddV2" op_name="add"}
+  %add.1 = s32[] add(s32[] %get-tuple-element.35, s32[] %constant.3), metadata={op_type="AddV2" op_name="add"}
+  %get-tuple-element.36 = s32[] get-tuple-element((s32[], s32[], s32[]) %inputs.0), index=1
+  %copy.4 = s32[] copy(s32[] %get-tuple-element.36), metadata={op_name="XLA_Args"}
+  %get-tuple-element.37 = s32[] get-tuple-element((s32[], s32[], s32[]) %inputs.0), index=2
+  %copy.5 = s32[] copy(s32[] %get-tuple-element.37), metadata={op_name="XLA_Args"}
+  %copy.7 = s32[] copy(s32[] %copy.5), control-predecessors={%copy.4}
+  %remainder = s32[] remainder(s32[] %copy.4, s32[] %copy.5), metadata={op_type="FloorMod" op_name="mod"}
+  %fusion = s32[] fusion(s32[] %remainder, s32[] %copy.5), kind=kLoop, calls=%fused_computation, metadata={op_type="FloorMod" op_name="mod"}
+  ROOT %tuple.10 = (s32[], s32[], s32[]) tuple(s32[] %add.1, s32[] %copy.7, s32[] %fusion)
+}
+
+%cond_wrapper.37.clone (inputs.1: (s32[], s32[], s32[])) -> pred[] {
+  %inputs.1 = (s32[], s32[], s32[]) parameter(0)
+  %get-tuple-element.18 = s32[] get-tuple-element((s32[], s32[], s32[]) %inputs.1), index=2, metadata={op_name="XLA_Args"}
+  %constant.10 = s32[] constant(0), metadata={op_type="Greater" op_name="Greater"}
+  ROOT %compare.5 = pred[] compare(s32[] %get-tuple-element.18, s32[] %constant.10), direction=GT, metadata={op_type="Greater" op_name="Greater"}
+}
+
+ENTRY %a_inference_gcd_38__XlaMustCompile_true_config_proto___n_007_n_003CPU_020_001_n_007_n_003GPU_020_0002_002J_0008_001__executor_type____.54 (arg0.1: s32[], arg1.2: s32[]) -> s32[] {
+  %constant.7 = s32[] constant(0), metadata={op_type="StatelessWhile" op_name="while"}
+  %copy.11 = s32[] copy(s32[] %constant.7)
+  %arg0.1 = s32[] parameter(0), parameter_replication={false}, metadata={op_name="XLA_Args"}
+  %copy.9 = s32[] copy(s32[] %arg0.1)
+  %arg1.2 = s32[] parameter(1), parameter_replication={false}, metadata={op_name="XLA_Args"}
+  %copy.10 = s32[] copy(s32[] %arg1.2)
+  %tuple.7 = (s32[], s32[], s32[]) tuple(s32[] %copy.11, s32[] %copy.9, s32[] %copy.10)
+  %while = (s32[], s32[], s32[]) while((s32[], s32[], s32[]) %tuple.7), condition=%cond_wrapper.37.clone, body=%while_body_10__.10.clone
+  ROOT %get-tuple-element.26 = s32[] get-tuple-element((s32[], s32[], s32[]) %while), index=1, metadata={op_type="StatelessWhile" op_name="while"}
+}
+

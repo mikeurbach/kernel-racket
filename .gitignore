@@ -4,6 +4,12 @@
 *.js
 *.rktd
 *.sxref
+*__pycache__
+*.svg
+*.dot
+*.vcd
+*.pyc
+mlir/examples/**/*_test
 compiled/
 verilog/durin_verilog.cache
 verilog/durin_verilog.hw

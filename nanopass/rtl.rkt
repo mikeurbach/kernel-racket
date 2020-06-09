@@ -1174,8 +1174,8 @@
 
 (define adt-to-verilog
   (compose1
-   pretty-format
-   rtl-to-pprint
+   ;; pretty-format
+   ;; rtl-to-pprint
    add-boilerplate-states
    split-states
    add-state-names
